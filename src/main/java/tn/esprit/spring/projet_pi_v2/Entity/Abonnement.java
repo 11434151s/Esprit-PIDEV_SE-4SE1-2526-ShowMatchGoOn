@@ -1,28 +1,27 @@
 package tn.esprit.spring.projet_pi_v2.Entity;
 
 import lombok.*;
-import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.util.Date;
+import jakarta.validation.constraints.*;
 
 @Document(collection = "abonnements")
 @Getter
 @Setter
-@FieldDefaults(level = AccessLevel.PRIVATE)
-@ToString
-@AllArgsConstructor @NoArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
 public class Abonnement {
 
     @Id
-    String id;
+    private String id;
 
-    Date dateDebut;
-    Date dateFin;
-    double prix;
+    @NotNull(message = "Le type d'abonnement est obligatoire")
+    private AbonnementType type;
 
-    AbonnementType type;
-    String clientId;
+    @Positive(message = "Le prix doit être positif")
+    private double prix;
+
+    @NotBlank(message = "La description est obligatoire")
+    @Size(min = 10, max = 500, message = "La description doit contenir entre 10 et 500 caractères")
+    private String description;
 }
-
