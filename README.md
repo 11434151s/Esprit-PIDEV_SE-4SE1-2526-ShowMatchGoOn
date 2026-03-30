@@ -80,3 +80,7 @@ Année universitaire : 2025–2026
 cd frontend
 npm install
 npm start
+
+### Accès
+Frontend : http://localhost:4200
+Backend : http://localhost:8091
