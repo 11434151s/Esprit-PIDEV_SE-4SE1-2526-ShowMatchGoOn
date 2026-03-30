@@ -2,9 +2,9 @@ name: Backend CI/CD
 
 on:
   push:
-    branches: [ main , Devops ]
+    branches: [ main, Devops ]
   pull_request:
-    branches: [ main , Devops ]
+    branches: [ main, Devops ]
 
 jobs:
   build-and-test:
@@ -24,7 +24,7 @@ jobs:
         run: |
           cd backend
           chmod +x mvnw
-          ./mvnw compile
+          ./mvnw compile -DskipTests
 
       - name: Exécuter les tests
         run: |
@@ -35,11 +35,6 @@ jobs:
         run: |
           cd backend
           ./mvnw package -DskipTests
-
-      - name: Build image Docker
-        run: |
-          cd backend
-          docker build -t showmatchgoon-backend .
 
       - name: Sauvegarder le JAR
         uses: actions/upload-artifact@v4
