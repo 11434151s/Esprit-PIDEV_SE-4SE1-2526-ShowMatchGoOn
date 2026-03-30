@@ -1,0 +1,48 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v3
+
+      - name: Configurer Java 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Compiler le projet
+        run: |
+          cd backend
+          chmod +x mvnw
+          ./mvnw compile
+
+      - name: Exécuter les tests
+        run: |
+          cd backend
+          ./mvnw test
+
+      - name: Créer le JAR
+        run: |
+          cd backend
+          ./mvnw package -DskipTests
+
+      - name: Build image Docker
+        run: |
+          cd backend
+          docker build -t showmatchgoon-backend .
+
+      - name: Sauvegarder le JAR
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-jar
+          path: backend/target/*.jar
