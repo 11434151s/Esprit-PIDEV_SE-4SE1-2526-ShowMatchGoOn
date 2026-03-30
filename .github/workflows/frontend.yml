@@ -24,10 +24,15 @@ jobs:
           cd frontend
           npm install --legacy-peer-deps
 
+      - name: Donner permissions à ng
+        run: |
+          cd frontend
+          chmod +x node_modules/.bin/ng
+
       - name: Build production
         run: |
           cd frontend
-          npx ng build --configuration production
+          ./node_modules/.bin/ng build --configuration production
 
       - name: Sauvegarder le dist
         uses: actions/upload-artifact@v4
