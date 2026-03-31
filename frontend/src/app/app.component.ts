@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+
 import {
   trigger,
   style,
@@ -19,26 +20,21 @@ import {
   UserCog,
   Menu,
   X,
-  CreditCard,
-  Award,
 } from 'lucide-angular';
 
 import { UnifiedHomeComponent } from './components/unified-home/unified-home.component';
 import { AiDiscoveryComponent } from './components/ai-discovery/ai-discovery.component';
 import { CinemaJourneyComponent } from './components/cinema-journey/cinema-journey.component';
-import { SocialOverlayComponent } from './components/social-overlay/social-overlay.component';
 import { AdminContentComponent } from './components/admin-content/admin-content.component';
 import { AdminCinemaComponent } from './components/admin-cinema/admin-cinema.component';
 import { AdminNotificationsComponent } from './components/admin-notifications/admin-notifications.component';
 import { AdminUsersComponent } from './components/admin-users/admin-users.component';
-import { AdminAbonnementComponent } from './components/admin-abonnement/admin-abonnement.component';
-import { UserAbonnementComponent } from './components/user-abonnement/user-abonnement.component';
-import { AdminFidelityComponent } from './components/admin-fidelity/admin-fidelity.component';
-import { UserFidelityComponent } from './components/user-fidelity/user-fidelity.component';
+import { FeedbackComponent } from './components/feedback/feedback.component';
+import { WatchPartyComponent } from './components/watchparty/watchparty.component';
 
 type AppMode = 'user' | 'admin';
-type UserTab = 'home' | 'discover' | 'cinema' | 'social' | 'abonnements' | 'fidelity';
-type AdminTab = 'content' | 'cinema' | 'notifications' | 'users' | 'abonnements' | 'fidelity';
+type UserTab = 'home' | 'discover' | 'cinema' | 'feedback' | 'watchparty';
+type AdminTab = 'content' | 'cinema' | 'notifications' | 'users' | 'feedback' | 'watchparty';
 
 interface TabItem {
   id: string;
@@ -55,15 +51,12 @@ interface TabItem {
     UnifiedHomeComponent,
     AiDiscoveryComponent,
     CinemaJourneyComponent,
-    SocialOverlayComponent,
     AdminContentComponent,
     AdminCinemaComponent,
     AdminNotificationsComponent,
     AdminUsersComponent,
-    AdminAbonnementComponent,
-    UserAbonnementComponent,
-    AdminFidelityComponent,
-    UserFidelityComponent,
+    FeedbackComponent,
+    WatchPartyComponent,
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
@@ -91,8 +84,6 @@ export class AppComponent {
   readonly UserCogIcon = UserCog;
   readonly MenuIcon = Menu;
   readonly XIcon = X;
-  readonly CreditCardIcon = CreditCard;
-  readonly AwardIcon = Award;
 
   appMode = signal<AppMode>('user');
   userTab = signal<UserTab>('home');
@@ -101,21 +92,20 @@ export class AppComponent {
   sidebarOpen = signal(true);
 
   readonly userTabs: TabItem[] = [
-    { id: 'home',        label: 'Home',          icon: Home },
-    { id: 'discover',    label: 'AI Discovery',  icon: Sparkles },
-    { id: 'cinema',      label: 'Cinema',        icon: Ticket },
-    { id: 'social',      label: 'Watch Parties', icon: Users },
-    { id: 'abonnements', label: 'Abonnements',   icon: CreditCard },
-    { id: 'fidelity',    label: 'Fidélité',      icon: Award },
+    { id: 'home', label: 'Home', icon: Home },
+    { id: 'discover', label: 'AI Discovery', icon: Sparkles },
+    { id: 'cinema', label: 'Cinema', icon: Ticket },
+    { id: 'feedback', label: 'Feedback', icon: Bell },
+    { id: 'watchparty', label: 'Watch Party', icon: Users },
   ];
 
   readonly adminTabs: TabItem[] = [
-    { id: 'content',       label: 'Content Management', icon: FileText },
-    { id: 'cinema',        label: 'Cinema Partners',    icon: MapPin },
-    { id: 'notifications', label: 'Notifications',      icon: Bell },
-    { id: 'users',         label: 'Users & Loyalty',    icon: UserCog },
-    { id: 'abonnements',   label: 'Abonnements',        icon: CreditCard },
-    { id: 'fidelity',      label: 'Fidélité',           icon: Award },
+    { id: 'content', label: 'Content Management', icon: FileText },
+    { id: 'cinema', label: 'Cinema Partners', icon: MapPin },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'users', label: 'Users & Loyalty', icon: UserCog },
+    { id: 'feedback', label: 'Liste Feedbacks', icon: Bell },
+    { id: 'watchparty', label: 'Liste WatchParties', icon: Users },
   ];
 
   toggleMode() {

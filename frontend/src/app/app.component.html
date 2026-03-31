@@ -1,31 +1,40 @@
-<!-- Admin Mode with Sidebar -->
 <div *ngIf="appMode() === 'admin'" class="min-h-screen bg-[#0B0E14] text-white flex w-full">
   <aside
     [class]="sidebarOpen() ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
     class="fixed md:sticky top-0 left-0 h-screen w-64 bg-[#0B0E14] border-r border-[#8B5CF6]/20 transition-transform duration-200 ease-in-out z-50 flex flex-col">
+
     <div class="border-b border-[#8B5CF6]/20 p-4">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 bg-gradient-to-br from-[#8B5CF6] to-[#EC4899] rounded-xl flex items-center justify-center">
           <lucide-icon [img]="TicketIcon" class="w-6 h-6 text-white"></lucide-icon>
         </div>
         <div>
-          <h1 class="text-lg font-semibold bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] bg-clip-text text-transparent">ShowMatchGoOn</h1>
+          <h1 class="text-lg font-semibold bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] bg-clip-text text-transparent">
+            ShowMatchGoOn
+          </h1>
           <p class="text-xs text-gray-400">Admin Panel</p>
         </div>
       </div>
     </div>
+
     <div class="flex-1 overflow-y-auto p-2">
       <nav class="space-y-1">
-        <button *ngFor="let tab of adminTabs" (click)="setAdminTab(tab.id)"
-          [class]="adminTab() === tab.id ? 'bg-[#8B5CF6] text-white' : 'text-gray-400 hover:text-white hover:bg-[#8B5CF6]/10'"
+        <button
+          *ngFor="let tab of adminTabs"
+          (click)="setAdminTab(tab.id)"
+          [class]="adminTab() === tab.id
+            ? 'bg-[#8B5CF6] text-white'
+            : 'text-gray-400 hover:text-white hover:bg-[#8B5CF6]/10'"
           class="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm">
           <lucide-icon [img]="tab.icon" class="w-4 h-4"></lucide-icon>
           <span>{{ tab.label }}</span>
         </button>
       </nav>
     </div>
+
     <div class="border-t border-[#8B5CF6]/20 p-4">
-      <button (click)="toggleMode()"
+      <button
+        (click)="toggleMode()"
         class="w-full flex items-center justify-center gap-2 px-4 py-2 border border-[#8B5CF6] text-[#8B5CF6] hover:bg-[#8B5CF6]/10 rounded-lg transition-all text-sm">
         <lucide-icon [img]="LayoutDashboardIcon" class="w-4 h-4"></lucide-icon>
         <span>Switch to User View</span>
@@ -38,29 +47,32 @@
   <div class="flex-1 flex flex-col min-w-0">
     <header class="sticky top-0 z-40 bg-[#0B0E14]/80 backdrop-blur-xl border-b border-[#8B5CF6]/20">
       <div class="flex items-center gap-4 h-16 px-4 sm:px-6 lg:px-8">
-        <button (click)="toggleSidebar()" class="md:hidden p-2 text-gray-400 hover:text-white hover:bg-[#8B5CF6]/10 rounded-lg">
+        <button
+          (click)="toggleSidebar()"
+          class="md:hidden p-2 text-gray-400 hover:text-white hover:bg-[#8B5CF6]/10 rounded-lg">
           <lucide-icon [img]="MenuIcon" class="w-5 h-5"></lucide-icon>
         </button>
         <div class="flex-1"></div>
-        <button (click)="toggleMode()"
+        <button
+          (click)="toggleMode()"
           class="hidden md:flex items-center gap-2 px-4 py-2 border border-[#8B5CF6] text-[#8B5CF6] hover:bg-[#8B5CF6]/10 rounded-lg transition-all text-sm">
           <lucide-icon [img]="LayoutDashboardIcon" class="w-4 h-4"></lucide-icon>
           <span>User View</span>
         </button>
       </div>
     </header>
-    <main class="flex-1 overflow-auto">
-      <app-admin-content        *ngIf="adminTab() === 'content'"></app-admin-content>
-      <app-admin-cinema         *ngIf="adminTab() === 'cinema'"></app-admin-cinema>
-      <app-admin-notifications  *ngIf="adminTab() === 'notifications'"></app-admin-notifications>
-      <app-admin-users          *ngIf="adminTab() === 'users'"></app-admin-users>
-      <app-admin-abonnement     *ngIf="adminTab() === 'abonnements'"></app-admin-abonnement>
-      <app-admin-fidelity       *ngIf="adminTab() === 'fidelity'"></app-admin-fidelity>
+
+    <main class="flex-1 overflow-auto p-6">
+      <app-admin-content *ngIf="adminTab() === 'content'"></app-admin-content>
+      <app-admin-cinema *ngIf="adminTab() === 'cinema'"></app-admin-cinema>
+      <app-admin-notifications *ngIf="adminTab() === 'notifications'"></app-admin-notifications>
+      <app-admin-users *ngIf="adminTab() === 'users'"></app-admin-users>
+      <app-feedback *ngIf="adminTab() === 'feedback'" [mode]="'admin'"></app-feedback>
+      <app-watchparty *ngIf="adminTab() === 'watchparty'" [mode]="'admin'"></app-watchparty>
     </main>
   </div>
 </div>
 
-<!-- User Mode -->
 <div *ngIf="appMode() === 'user'" class="min-h-screen bg-[#0B0E14] text-white">
   <header class="sticky top-0 z-40 bg-[#0B0E14]/80 backdrop-blur-xl border-b border-[#8B5CF6]/20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -70,39 +82,59 @@
             <lucide-icon [img]="TicketIcon" class="w-6 h-6 text-white"></lucide-icon>
           </div>
           <div>
-            <h1 class="text-xl font-semibold bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] bg-clip-text text-transparent">ShowMatchGoOn</h1>
+            <h1 class="text-xl font-semibold bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] bg-clip-text text-transparent">
+              ShowMatchGoOn
+            </h1>
             <p class="text-xs text-gray-400">Your Entertainment Hub</p>
           </div>
         </div>
-        <nav class="hidden md:flex items-center gap-6">
-          <button *ngFor="let tab of userTabs" (click)="setUserTab(tab.id)"
-            [class]="userTab() === tab.id ? 'bg-[#8B5CF6] text-white' : 'text-gray-400 hover:text-white hover:bg-[#8B5CF6]/10'"
-            class="flex items-center gap-2 px-4 py-2 rounded-lg transition-all">
+
+        <nav class="hidden md:flex items-center gap-2 overflow-x-auto">
+          <button
+            *ngFor="let tab of userTabs"
+            (click)="setUserTab(tab.id)"
+            [class]="userTab() === tab.id
+              ? 'bg-[#8B5CF6] text-white'
+              : 'text-gray-400 hover:text-white hover:bg-[#8B5CF6]/10'"
+            class="flex items-center gap-1 px-3 py-2 rounded-lg transition-all whitespace-nowrap flex-shrink-0">
             <lucide-icon [img]="tab.icon" class="w-4 h-4"></lucide-icon>
             <span class="text-sm">{{ tab.label }}</span>
           </button>
         </nav>
+
         <div class="flex items-center gap-3">
-          <button (click)="toggleMode()"
+          <button
+            (click)="toggleMode()"
             class="hidden md:flex items-center gap-2 px-4 py-2 border border-[#8B5CF6] text-[#8B5CF6] hover:bg-[#8B5CF6]/10 rounded-lg transition-all text-sm">
             <lucide-icon [img]="LayoutDashboardIcon" class="w-4 h-4"></lucide-icon>
             <span>Admin Panel</span>
           </button>
-          <button (click)="toggleMobileMenu()" class="md:hidden p-2 text-gray-400 hover:text-white hover:bg-[#8B5CF6]/10 rounded-lg">
+          <button
+            (click)="toggleMobileMenu()"
+            class="md:hidden p-2 text-gray-400 hover:text-white hover:bg-[#8B5CF6]/10 rounded-lg">
             <lucide-icon [img]="mobileMenuOpen() ? XIcon : MenuIcon" class="w-6 h-6"></lucide-icon>
           </button>
         </div>
       </div>
     </div>
-    <div *ngIf="mobileMenuOpen()" [@slideDown] class="md:hidden border-t border-[#8B5CF6]/20 overflow-hidden">
+
+    <div
+      *ngIf="mobileMenuOpen()"
+      [@slideDown]
+      class="md:hidden border-t border-[#8B5CF6]/20 overflow-hidden">
       <div class="px-4 py-4 space-y-2">
-        <button *ngFor="let tab of userTabs" (click)="setUserTab(tab.id)"
-          [class]="userTab() === tab.id ? 'bg-[#8B5CF6] text-white' : 'text-gray-400 hover:text-white hover:bg-[#8B5CF6]/10'"
+        <button
+          *ngFor="let tab of userTabs"
+          (click)="setUserTab(tab.id)"
+          [class]="userTab() === tab.id
+            ? 'bg-[#8B5CF6] text-white'
+            : 'text-gray-400 hover:text-white hover:bg-[#8B5CF6]/10'"
           class="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all">
           <lucide-icon [img]="tab.icon" class="w-5 h-5"></lucide-icon>
           <span>{{ tab.label }}</span>
         </button>
-        <button (click)="toggleMode()"
+        <button
+          (click)="toggleMode()"
           class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:text-white hover:bg-[#8B5CF6]/10 border-t border-[#8B5CF6]/20 mt-4 pt-4">
           <lucide-icon [img]="LayoutDashboardIcon" class="w-5 h-5"></lucide-icon>
           <span>Switch to Admin</span>
@@ -112,12 +144,11 @@
   </header>
 
   <main class="pb-12">
-    <app-unified-home     *ngIf="userTab() === 'home'"></app-unified-home>
-    <app-ai-discovery     *ngIf="userTab() === 'discover'"></app-ai-discovery>
-    <app-cinema-journey   *ngIf="userTab() === 'cinema'"></app-cinema-journey>
-    <app-social-overlay   *ngIf="userTab() === 'social'"></app-social-overlay>
-    <app-user-abonnement  *ngIf="userTab() === 'abonnements'"></app-user-abonnement>
-    <app-user-fidelity    *ngIf="userTab() === 'fidelity'"></app-user-fidelity>
+    <app-unified-home *ngIf="userTab() === 'home'"></app-unified-home>
+    <app-ai-discovery *ngIf="userTab() === 'discover'"></app-ai-discovery>
+    <app-cinema-journey *ngIf="userTab() === 'cinema'"></app-cinema-journey>
+    <app-feedback *ngIf="userTab() === 'feedback'" [mode]="'user'"></app-feedback>
+    <app-watchparty *ngIf="userTab() === 'watchparty'" [mode]="'user'"></app-watchparty>
   </main>
 
   <footer class="border-t border-[#8B5CF6]/20 py-8">
