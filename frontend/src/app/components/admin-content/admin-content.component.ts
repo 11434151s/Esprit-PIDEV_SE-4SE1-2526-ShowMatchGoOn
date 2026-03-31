@@ -48,6 +48,9 @@ export class AdminContentComponent implements OnInit {
   showForm = signal(false);
   editingId = signal<string | null>(null);
   contentForm!: FormGroup;
+  submitAttempted = false;
+  private readonly allowedTextCharactersRegex = /[^\p{L}\p{N}\s\-']/gu;
+  private readonly nonDigitRegex = /[^0-9]/g;
 
   constructor(
     private contentService: ContentService,
@@ -105,6 +108,7 @@ export class AdminContentComponent implements OnInit {
         Validators.required,
         CustomValidators.minLength(3),
         CustomValidators.maxLength(255),
+        CustomValidators.noSpecialCharacters,
         CustomValidators.noLeadingTrailingWhitespace
       ]],
       description: ['', [
@@ -113,7 +117,7 @@ export class AdminContentComponent implements OnInit {
         CustomValidators.maxLength(1000),
         CustomValidators.noLeadingTrailingWhitespace
       ]],
-      releaseDate: ['', Validators.required],
+      releaseDate: ['', [Validators.required, CustomValidators.pastDateValidator]],
       category: ['MOVIE', Validators.required],
       selectedCategoryId: ['', Validators.required],
       contentType: ['FILM', Validators.required],
@@ -254,6 +258,7 @@ export class AdminContentComponent implements OnInit {
   }
 
   openForm() {
+    this.submitAttempted = false;
     this.editingId.set(null);
     this.contentType.set('FILM');
     this.initializeForm();
@@ -267,12 +272,14 @@ export class AdminContentComponent implements OnInit {
   }
 
   closeForm() {
+    this.submitAttempted = false;
     this.showForm.set(false);
     this.editingId.set(null);
     this.contentForm.reset();
   }
 
   editContent(content: any) {
+    this.submitAttempted = false;
     this.editingId.set(content.id || '');
     
     // Determine content type from the data
@@ -346,6 +353,8 @@ export class AdminContentComponent implements OnInit {
   }
 
   saveContent() {
+    this.submitAttempted = true;
+
     if (!this.contentForm.valid) {
       // Mark all fields as touched to show validation errors
       Object.keys(this.contentForm.controls).forEach(key => {
@@ -583,6 +592,66 @@ export class AdminContentComponent implements OnInit {
     return genre?.name || 'Unknown Genre';
   }
 
+  sanitizeDirectorInput(event: Event) {
+    this.sanitizeTextInput(event, 'director');
+  }
+
+  sanitizeTitleInput(event: Event) {
+    this.sanitizeTextInput(event, 'title');
+  }
+
+  sanitizeTopicInput(event: Event) {
+    this.sanitizeTextInput(event, 'topic');
+  }
+
+  sanitizeNarratorInput(event: Event) {
+    this.sanitizeTextInput(event, 'narrator');
+  }
+
+  sanitizePositiveIntegerInput(event: Event, fieldName: string) {
+    const input = event.target as HTMLInputElement | null;
+    if (!input) return;
+
+    const sanitizedValue = input.value.replace(this.nonDigitRegex, '');
+    if (sanitizedValue === input.value) return;
+
+    input.value = sanitizedValue;
+    this.contentForm.get(fieldName)?.setValue(sanitizedValue, { emitEvent: false });
+  }
+
+  private sanitizeTextInput(event: Event, fieldName: string) {
+    const input = event.target as HTMLInputElement | null;
+    if (!input) return;
+
+    const sanitizedValue = input.value.replace(this.allowedTextCharactersRegex, '');
+    if (sanitizedValue === input.value) return;
+
+    input.value = sanitizedValue;
+    this.contentForm.get(fieldName)?.setValue(sanitizedValue, { emitEvent: false });
+  }
+
+  private getFieldLabel(fieldName: string): string {
+    const labels: Record<string, string> = {
+      title: 'Title',
+      description: 'Description',
+      releaseDate: 'Release date',
+      selectedCategoryId: 'Category',
+      durationInMinutes: 'Duration',
+      director: 'Director',
+      numberOfSeasons: 'Number of seasons',
+      numberOfEpisodes: 'Number of episodes',
+      topic: 'Topic',
+      narrator: 'Narrator'
+    };
+
+    return labels[fieldName] || fieldName;
+  }
+
+  hasFieldError(fieldName: string): boolean {
+    const control = this.contentForm.get(fieldName);
+    return !!(control && control.invalid && (control.touched || control.dirty || this.submitAttempted));
+  }
+
   getStatusColor(status: string): string {
     switch (status) {
       case 'active':
@@ -601,11 +670,18 @@ export class AdminContentComponent implements OnInit {
     if (!control || !control.errors || !control.touched) return '';
 
     const errors = control.errors;
-    if (errors['required']) return `${fieldName} is required`;
-    if (errors['minlength']) return `${fieldName} must be at least ${errors['minlength'].requiredLength} characters`;
-    if (errors['maxlength']) return `${fieldName} must not exceed ${errors['maxlength'].requiredLength} characters`;
-    if (errors['numeric']) return `${fieldName} must be a valid number`;
-    if (errors['minvalue']) return `${fieldName} must be at least ${errors['minvalue'].min}`;
+    const label = this.getFieldLabel(fieldName);
+
+    if (errors['required']) return `${label} is required`;
+    if (errors['minlength']) return `${label} must be at least ${errors['minlength'].requiredLength} characters`;
+    if (errors['maxlength']) return `${label} must not exceed ${errors['maxlength'].requiredLength} characters`;
+    if (errors['specialCharacters']) return `${label} cannot contain special characters`;
+    if (errors['leadingTrailingWhitespace']) return `${label} cannot start or end with spaces`;
+    if (errors['numeric']) return `${label} must be a valid number`;
+    if (errors['positiveInteger']) return `${label} must be a positive whole number`;
+    if (errors['min']) return `${label} must be at least ${errors['min'].min}`;
+    if (errors['minvalue']) return `${label} must be at least ${errors['minvalue'].min}`;
+    if (errors['pastdate']) return `${label} cannot be in the future`;
 
     return 'Invalid value';
   }

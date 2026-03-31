@@ -1,7 +1,7 @@
 import { Component, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { LucideAngularModule, Plus, Edit2, Trash2, X, Loader } from 'lucide-angular';
+import { LucideAngularModule, Plus, Edit2, Trash2, X, Loader, Inbox } from 'lucide-angular';
 import { ContentService, CategoryDTO } from '../../services/api.service';
 import { CustomValidators } from '../../services/validators';
 
@@ -18,6 +18,7 @@ export class AdminCategoriesComponent implements OnInit {
   readonly Trash2Icon = Trash2;
   readonly CloseIcon = X;
   readonly LoaderIcon = Loader;
+  readonly InboxIcon = Inbox;
 
   categoryList = signal<CategoryDTO[]>([]);
   loading = signal(false);
@@ -25,6 +26,7 @@ export class AdminCategoriesComponent implements OnInit {
   showForm = signal(false);
   editingId = signal<string | null>(null);
   categoryForm!: FormGroup;
+  private readonly allowedTextCharactersRegex = /[^\p{L}\p{N}\s\-',.àâäéèêëïîôöùûüçœæÀÂÄÉÈÊËÏÎÔÖÙÛÜÇŒÆ]/gu;
 
   constructor(
     private contentService: ContentService,
@@ -76,6 +78,7 @@ export class AdminCategoriesComponent implements OnInit {
           Validators.required,
           CustomValidators.minLength(2),
           CustomValidators.maxLength(100),
+          CustomValidators.noSpecialCharacters,
           CustomValidators.noLeadingTrailingWhitespace
         ]
       ],
@@ -183,6 +186,12 @@ export class AdminCategoriesComponent implements OnInit {
    */
   saveCategory() {
     if (this.categoryForm.invalid) {
+      Object.keys(this.categoryForm.controls).forEach(key => {
+        const control = this.categoryForm.get(key);
+        if (control?.invalid) {
+          control.markAsTouched();
+        }
+      });
       this.error.set('Please fill in all required fields');
       return;
     }
@@ -301,8 +310,11 @@ export class AdminCategoriesComponent implements OnInit {
     if (field.errors['maxlength']) {
       return `${fieldName} must not exceed ${field.errors['maxlength'].requiredLength} characters`;
     }
-    if (field.errors['whitespace']) {
-      return `${fieldName} cannot contain only spaces`;
+    if (field.errors['specialCharacters']) {
+      return `${fieldName} cannot contain special characters`;
+    }
+    if (field.errors['leadingTrailingWhitespace']) {
+      return `${fieldName} cannot start or end with spaces`;
     }
 
     return 'Invalid field';
@@ -317,5 +329,16 @@ export class AdminCategoriesComponent implements OnInit {
   hasError(fieldName: string): boolean {
     const field = this.categoryForm.get(fieldName);
     return !!(field && field.invalid && field.touched);
+  }
+
+  sanitizeNameInput(event: Event) {
+    const input = event.target as HTMLInputElement | null;
+    if (!input) return;
+
+    const sanitizedValue = input.value.replace(this.allowedTextCharactersRegex, '');
+    if (sanitizedValue === input.value) return;
+
+    input.value = sanitizedValue;
+    this.categoryForm.get('name')?.setValue(sanitizedValue, { emitEvent: false });
   }
 }

@@ -51,23 +51,23 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-[#8B5CF6]/10">
-          <tr *ngFor="let notif of notifications" class="hover:bg-[#0B0E14]/50 transition-colors" [class]="notif.read ? '' : 'bg-[#8B5CF6]/5'">
-            <td class="px-6 py-4 text-white font-medium">{{ notif.title }}</td>
+          <tr *ngFor="let notif of notifications" class="hover:bg-[#0B0E14]/50 transition-colors" [class]="isNotificationRead(notif) ? '' : 'bg-[#8B5CF6]/5'">
+            <td class="px-6 py-4 text-white font-medium">{{ notif.title || 'Notification' }}</td>
             <td class="px-6 py-4 text-gray-400 max-w-xs truncate">{{ notif.message }}</td>
             <td class="px-6 py-4">
-              <span [class]="notif.read ? 'text-green-500' : 'text-yellow-500'" class="text-xs font-medium">
-                {{ notif.read ? 'Read' : 'Unread' }}
+              <span [class]="isNotificationRead(notif) ? 'text-green-500' : 'text-yellow-500'" class="text-xs font-medium">
+                {{ isNotificationRead(notif) ? 'Read' : 'Unread' }}
               </span>
             </td>
             <td class="px-6 py-4">
               <div class="flex items-center justify-end gap-2">
                 <button 
-                  *ngIf="!notif.read"
+                  *ngIf="!isNotificationRead(notif)"
                   (click)="markAsRead(notif.id!)"
                   class="px-2 py-1 text-xs text-gray-400 hover:text-[#8B5CF6] hover:bg-[#8B5CF6]/10 rounded transition-all">
                   Mark Read
                 </button>
-                <button (click)="deleteNotification(notif.id!)" class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all">
+                <button (click)="deleteNotification(notif.id!)" title="Delete notification" aria-label="Delete notification" class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all">
                   <lucide-icon [img]="Trash2Icon" class="w-4 h-4"></lucide-icon>
                 </button>
               </div>
@@ -90,7 +90,7 @@
     <!-- Modal Header -->
     <div class="flex items-center justify-between p-6 border-b border-[#8B5CF6]/20">
       <h2 class="text-2xl text-white">Send New Notification</h2>
-      <button (click)="closeForm()" class="text-gray-400 hover:text-white">
+      <button (click)="closeForm()" title="Close form" aria-label="Close form" class="text-gray-400 hover:text-white">
         <lucide-icon [img]="CloseIcon" class="w-5 h-5"></lucide-icon>
       </button>
     </div>

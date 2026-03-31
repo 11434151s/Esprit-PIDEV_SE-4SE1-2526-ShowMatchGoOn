@@ -196,16 +196,17 @@
       <div>
         <label class="block text-sm text-gray-300 mb-2">
           Title 
-          <span *ngIf="contentForm.get('title')?.invalid && contentForm.get('title')?.touched" class="text-red-500">*</span>
+          <span *ngIf="hasFieldError('title')" class="text-red-500">*</span>
         </label>
         <input
           type="text"
           formControlName="title"
+          (input)="sanitizeTitleInput($event)"
           placeholder="Content title"
           class="w-full px-4 py-2 bg-[#0B0E14] border border-[#8B5CF6]/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#8B5CF6]"
-          [class.border-red-500]="contentForm.get('title')?.invalid && contentForm.get('title')?.touched"
+          [class.border-red-500]="hasFieldError('title')"
         />
-        <p *ngIf="contentForm.get('title')?.invalid && contentForm.get('title')?.touched" class="text-red-500 text-sm mt-1">
+        <p *ngIf="hasFieldError('title')" class="text-red-500 text-sm mt-1">
           {{ getFieldError('title') }}
         </p>
       </div>
@@ -214,16 +215,16 @@
       <div>
         <label class="block text-sm text-gray-300 mb-2">
           Description 
-          <span *ngIf="contentForm.get('description')?.invalid && contentForm.get('description')?.touched" class="text-red-500">*</span>
+          <span *ngIf="hasFieldError('description')" class="text-red-500">*</span>
         </label>
         <textarea
           formControlName="description"
           placeholder="Content description"
           rows="4"
           class="w-full px-4 py-2 bg-[#0B0E14] border border-[#8B5CF6]/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#8B5CF6]"
-          [class.border-red-500]="contentForm.get('description')?.invalid && contentForm.get('description')?.touched"
+          [class.border-red-500]="hasFieldError('description')"
         ></textarea>
-        <p *ngIf="contentForm.get('description')?.invalid && contentForm.get('description')?.touched" class="text-red-500 text-sm mt-1">
+        <p *ngIf="hasFieldError('description')" class="text-red-500 text-sm mt-1">
           {{ getFieldError('description') }}
         </p>
       </div>
@@ -232,16 +233,16 @@
       <div>
         <label class="block text-sm text-gray-300 mb-2">
           Release Date 
-          <span *ngIf="contentForm.get('releaseDate')?.invalid && contentForm.get('releaseDate')?.touched" class="text-red-500">*</span>
+          <span *ngIf="hasFieldError('releaseDate')" class="text-red-500">*</span>
         </label>
         <input
           type="date"
           formControlName="releaseDate"
           title="Release date"
           class="w-full px-4 py-2 bg-[#0B0E14] border border-[#8B5CF6]/30 rounded-lg text-white focus:outline-none focus:border-[#8B5CF6]"
-          [class.border-red-500]="contentForm.get('releaseDate')?.invalid && contentForm.get('releaseDate')?.touched"
+          [class.border-red-500]="hasFieldError('releaseDate')"
         />
-        <p *ngIf="contentForm.get('releaseDate')?.invalid && contentForm.get('releaseDate')?.touched" class="text-red-500 text-sm mt-1">
+        <p *ngIf="hasFieldError('releaseDate')" class="text-red-500 text-sm mt-1">
           {{ getFieldError('releaseDate') }}
         </p>
       </div>
@@ -250,18 +251,18 @@
       <div>
         <label class="block text-sm text-gray-300 mb-2">
           Category 
-          <span *ngIf="contentForm.get('selectedCategoryId')?.invalid && contentForm.get('selectedCategoryId')?.touched" class="text-red-500">*</span>
+          <span *ngIf="hasFieldError('selectedCategoryId')" class="text-red-500">*</span>
         </label>
         <select
           formControlName="selectedCategoryId"
           title="Select category"
           class="w-full px-4 py-2 bg-[#0B0E14] border border-[#8B5CF6]/30 rounded-lg text-white focus:outline-none focus:border-[#8B5CF6]"
-          [class.border-red-500]="contentForm.get('selectedCategoryId')?.invalid && contentForm.get('selectedCategoryId')?.touched"
+          [class.border-red-500]="hasFieldError('selectedCategoryId')"
         >
           <option value="">-- Select Category --</option>
           <option *ngFor="let cat of categories()" [value]="cat.id">{{ cat.name }}</option>
         </select>
-        <p *ngIf="contentForm.get('selectedCategoryId')?.invalid && contentForm.get('selectedCategoryId')?.touched" class="text-red-500 text-sm mt-1">
+        <p *ngIf="hasFieldError('selectedCategoryId')" class="text-red-500 text-sm mt-1">
           {{ getFieldError('selectedCategoryId') }}
         </p>
       </div>
@@ -291,16 +292,19 @@
       <div *ngIf="contentType() === 'FILM'">
         <label class="block text-sm text-gray-300 mb-2">
           Duration (minutes) 
-          <span *ngIf="contentForm.get('durationInMinutes')?.invalid && contentForm.get('durationInMinutes')?.touched" class="text-red-500">*</span>
+          <span *ngIf="hasFieldError('durationInMinutes')" class="text-red-500">*</span>
         </label>
         <input
           type="number"
           formControlName="durationInMinutes"
+          min="1"
+          step="1"
+          (input)="sanitizePositiveIntegerInput($event, 'durationInMinutes')"
           placeholder="Duration in minutes"
           class="w-full px-4 py-2 bg-[#0B0E14] border border-[#8B5CF6]/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#8B5CF6]"
-          [class.border-red-500]="contentForm.get('durationInMinutes')?.invalid && contentForm.get('durationInMinutes')?.touched"
+          [class.border-red-500]="hasFieldError('durationInMinutes')"
         />
-        <p *ngIf="contentForm.get('durationInMinutes')?.invalid && contentForm.get('durationInMinutes')?.touched" class="text-red-500 text-sm mt-1">
+        <p *ngIf="hasFieldError('durationInMinutes')" class="text-red-500 text-sm mt-1">
           {{ getFieldError('durationInMinutes') }}
         </p>
       </div>
@@ -309,16 +313,17 @@
       <div *ngIf="contentType() === 'FILM'">
         <label class="block text-sm text-gray-300 mb-2">
           Director 
-          <span *ngIf="contentForm.get('director')?.invalid && contentForm.get('director')?.touched" class="text-red-500">*</span>
+          <span *ngIf="hasFieldError('director')" class="text-red-500">*</span>
         </label>
         <input
           type="text"
           formControlName="director"
+          (input)="sanitizeDirectorInput($event)"
           placeholder="Director name"
           class="w-full px-4 py-2 bg-[#0B0E14] border border-[#8B5CF6]/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#8B5CF6]"
-          [class.border-red-500]="contentForm.get('director')?.invalid && contentForm.get('director')?.touched"
+          [class.border-red-500]="hasFieldError('director')"
         />
-        <p *ngIf="contentForm.get('director')?.invalid && contentForm.get('director')?.touched" class="text-red-500 text-sm mt-1">
+        <p *ngIf="hasFieldError('director')" class="text-red-500 text-sm mt-1">
           {{ getFieldError('director') }}
         </p>
       </div>
@@ -327,16 +332,19 @@
       <div *ngIf="contentType() === 'SERIES'">
         <label class="block text-sm text-gray-300 mb-2">
           Number of Seasons 
-          <span *ngIf="contentForm.get('numberOfSeasons')?.invalid && contentForm.get('numberOfSeasons')?.touched" class="text-red-500">*</span>
+          <span *ngIf="hasFieldError('numberOfSeasons')" class="text-red-500">*</span>
         </label>
         <input
           type="number"
           formControlName="numberOfSeasons"
+          min="1"
+          step="1"
+          (input)="sanitizePositiveIntegerInput($event, 'numberOfSeasons')"
           placeholder="Number of seasons"
           class="w-full px-4 py-2 bg-[#0B0E14] border border-[#8B5CF6]/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#8B5CF6]"
-          [class.border-red-500]="contentForm.get('numberOfSeasons')?.invalid && contentForm.get('numberOfSeasons')?.touched"
+          [class.border-red-500]="hasFieldError('numberOfSeasons')"
         />
-        <p *ngIf="contentForm.get('numberOfSeasons')?.invalid && contentForm.get('numberOfSeasons')?.touched" class="text-red-500 text-sm mt-1">
+        <p *ngIf="hasFieldError('numberOfSeasons')" class="text-red-500 text-sm mt-1">
           {{ getFieldError('numberOfSeasons') }}
         </p>
       </div>
@@ -345,16 +353,19 @@
       <div *ngIf="contentType() === 'SERIES'">
         <label class="block text-sm text-gray-300 mb-2">
           Number of Episodes 
-          <span *ngIf="contentForm.get('numberOfEpisodes')?.invalid && contentForm.get('numberOfEpisodes')?.touched" class="text-red-500">*</span>
+          <span *ngIf="hasFieldError('numberOfEpisodes')" class="text-red-500">*</span>
         </label>
         <input
           type="number"
           formControlName="numberOfEpisodes"
+          min="1"
+          step="1"
+          (input)="sanitizePositiveIntegerInput($event, 'numberOfEpisodes')"
           placeholder="Number of episodes"
           class="w-full px-4 py-2 bg-[#0B0E14] border border-[#8B5CF6]/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#8B5CF6]"
-          [class.border-red-500]="contentForm.get('numberOfEpisodes')?.invalid && contentForm.get('numberOfEpisodes')?.touched"
+          [class.border-red-500]="hasFieldError('numberOfEpisodes')"
         />
-        <p *ngIf="contentForm.get('numberOfEpisodes')?.invalid && contentForm.get('numberOfEpisodes')?.touched" class="text-red-500 text-sm mt-1">
+        <p *ngIf="hasFieldError('numberOfEpisodes')" class="text-red-500 text-sm mt-1">
           {{ getFieldError('numberOfEpisodes') }}
         </p>
       </div>
@@ -363,16 +374,17 @@
       <div *ngIf="contentType() === 'DOCUMENTARY'">
         <label class="block text-sm text-gray-300 mb-2">
           Topic 
-          <span *ngIf="contentForm.get('topic')?.invalid && contentForm.get('topic')?.touched" class="text-red-500">*</span>
+          <span *ngIf="hasFieldError('topic')" class="text-red-500">*</span>
         </label>
         <input
           type="text"
           formControlName="topic"
+          (input)="sanitizeTopicInput($event)"
           placeholder="Documentary topic"
           class="w-full px-4 py-2 bg-[#0B0E14] border border-[#8B5CF6]/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#8B5CF6]"
-          [class.border-red-500]="contentForm.get('topic')?.invalid && contentForm.get('topic')?.touched"
+          [class.border-red-500]="hasFieldError('topic')"
         />
-        <p *ngIf="contentForm.get('topic')?.invalid && contentForm.get('topic')?.touched" class="text-red-500 text-sm mt-1">
+        <p *ngIf="hasFieldError('topic')" class="text-red-500 text-sm mt-1">
           {{ getFieldError('topic') }}
         </p>
       </div>
@@ -381,16 +393,17 @@
       <div *ngIf="contentType() === 'DOCUMENTARY'">
         <label class="block text-sm text-gray-300 mb-2">
           Narrator 
-          <span *ngIf="contentForm.get('narrator')?.invalid && contentForm.get('narrator')?.touched" class="text-red-500">*</span>
+          <span *ngIf="hasFieldError('narrator')" class="text-red-500">*</span>
         </label>
         <input
           type="text"
           formControlName="narrator"
+          (input)="sanitizeNarratorInput($event)"
           placeholder="Narrator name"
           class="w-full px-4 py-2 bg-[#0B0E14] border border-[#8B5CF6]/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#8B5CF6]"
-          [class.border-red-500]="contentForm.get('narrator')?.invalid && contentForm.get('narrator')?.touched"
+          [class.border-red-500]="hasFieldError('narrator')"
         />
-        <p *ngIf="contentForm.get('narrator')?.invalid && contentForm.get('narrator')?.touched" class="text-red-500 text-sm mt-1">
+        <p *ngIf="hasFieldError('narrator')" class="text-red-500 text-sm mt-1">
           {{ getFieldError('narrator') }}
         </p>
       </div>
@@ -406,7 +419,7 @@
       </button>
       <button
         (click)="saveContent()"
-        [disabled]="!contentForm.valid || loading()"
+        [disabled]="loading()"
         class="px-4 py-2 rounded-lg bg-[#8B5CF6] hover:bg-[#7C3AED] text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {{ loading() ? 'Saving...' : 'Save' }}

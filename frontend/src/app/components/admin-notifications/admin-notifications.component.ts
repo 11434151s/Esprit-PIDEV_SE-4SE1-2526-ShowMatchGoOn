@@ -63,7 +63,7 @@ export class AdminNotificationsComponent implements OnInit {
     this.error = null;
     this.notificationService.getNotifications().subscribe({
       next: (data) => {
-        this.notifications = data;
+        this.notifications = (data || []).map(item => this.normalizeNotification(item));
         this.loading = false;
         console.log(`✓ Loaded ${data.length} notification(s)`);
       },
@@ -112,7 +112,7 @@ export class AdminNotificationsComponent implements OnInit {
     this.loading = true;
     this.notificationService.createNotification(data).subscribe({
       next: (response) => {
-        this.notifications.unshift(response);
+        this.notifications.unshift(this.normalizeNotification(response));
         this.closeForm();
         this.loading = false;
       },
@@ -130,6 +130,7 @@ export class AdminNotificationsComponent implements OnInit {
         const notif = this.notifications.find(n => n.id === id);
         if (notif) {
           notif.isRead = true;
+          notif.read = true;
         }
       },
       error: (err) => {
@@ -153,6 +154,38 @@ export class AdminNotificationsComponent implements OnInit {
         },
       });
     }
+  }
+
+  isNotificationRead(notif: Notification): boolean {
+    return !!(notif.isRead ?? notif.read ?? false);
+  }
+
+  private normalizeNotification(notification: Notification): Notification {
+    const message = (notification.message || '').trim();
+    const title = (notification.title || '').trim();
+    const type = (notification.type || '').trim().toUpperCase();
+    const inferredTitle = this.inferTitle(message, type);
+
+    return {
+      ...notification,
+      title: title || inferredTitle,
+      message,
+      isRead: notification.isRead ?? notification.read ?? false,
+      read: notification.read ?? notification.isRead ?? false
+    };
+  }
+
+  private inferTitle(message: string, type: string): string {
+    const colonIndex = message.indexOf(':');
+    if (colonIndex > 0) {
+      return message.substring(0, colonIndex).trim();
+    }
+
+    if (type) {
+      return `${type.charAt(0)}${type.substring(1).toLowerCase()} Notification`;
+    }
+
+    return 'Notification';
   }
 
   get unreadCount(): number {

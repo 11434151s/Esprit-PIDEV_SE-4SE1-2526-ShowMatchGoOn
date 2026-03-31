@@ -27,6 +27,7 @@ export class AdminCinemaComponent implements OnInit {
   showForm = false;
   editingId: string | null = null;
   categoryForm!: FormGroup;
+  private readonly allowedTextCharactersRegex = /[^\p{L}\p{N}\s\-',.àâäéèêëïîôöùûüçœæÀÂÄÉÈÊËÏÎÔÖÙÛÜÇŒÆ]/gu;
 
   constructor(
     private categoryService: CategoryService,
@@ -175,7 +176,20 @@ export class AdminCinemaComponent implements OnInit {
     if (errors['required']) return `${fieldName} is required`;
     if (errors['minlength']) return `${fieldName} must be at least ${errors['minlength'].requiredLength} characters`;
     if (errors['maxlength']) return `${fieldName} must not exceed ${errors['maxlength'].requiredLength} characters`;
+    if (errors['specialCharacters']) return `${fieldName} cannot contain special characters`;
+    if (errors['leadingTrailingWhitespace']) return `${fieldName} cannot start or end with spaces`;
 
     return 'Invalid value';
+  }
+
+  sanitizeNameInput(event: Event) {
+    const input = event.target as HTMLInputElement | null;
+    if (!input) return;
+
+    const sanitizedValue = input.value.replace(this.allowedTextCharactersRegex, '');
+    if (sanitizedValue === input.value) return;
+
+    input.value = sanitizedValue;
+    this.categoryForm.get('name')?.setValue(sanitizedValue, { emitEvent: false });
   }
 }
