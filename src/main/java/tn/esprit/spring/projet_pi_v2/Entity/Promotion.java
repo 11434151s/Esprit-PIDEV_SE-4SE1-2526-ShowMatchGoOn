@@ -4,15 +4,12 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-
 import java.util.Date;
 
 @Document(collection = "promotions")
-@Getter
-@Setter
+@Getter @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@ToString
-@AllArgsConstructor @NoArgsConstructor
+@ToString @AllArgsConstructor @NoArgsConstructor
 public class Promotion {
 
     @Id
@@ -21,6 +18,7 @@ public class Promotion {
     String code;
     double pourcentageReduction;
     Date dateExpiration;
-    String clientId;
-}
+    String clientId;       // null = promo globale, non-null = promo ciblée
 
+    boolean active = true; // ✅ Ajout pour US-P06
+}

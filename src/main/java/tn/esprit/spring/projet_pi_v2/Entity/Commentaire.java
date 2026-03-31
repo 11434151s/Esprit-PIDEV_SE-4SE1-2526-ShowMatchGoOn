@@ -4,15 +4,12 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-
 import java.util.Date;
 
 @Document(collection = "commentaires")
-@Getter
-@Setter
+@Getter @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@ToString
-@AllArgsConstructor @NoArgsConstructor
+@ToString @AllArgsConstructor @NoArgsConstructor
 public class Commentaire {
 
     @Id
@@ -20,8 +17,10 @@ public class Commentaire {
 
     String contenu;
     Date dateCommentaire;
-
     String postId;
-    String clientId;
+
+    // ✅ Remplace clientId par des infos lisibles
+    String authorId;
+    String authorUsername;
 }
 

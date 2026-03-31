@@ -34,7 +34,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .password(user.getMotDePasse())
                 .authorities(authorities)
                 .accountExpired(false)
-                .accountLocked(false)
+                .accountLocked(user.isBlocked()) // ✅ Remplace false par user.isBlocked()
                 .credentialsExpired(false)
                 .disabled(false)
                 .build();

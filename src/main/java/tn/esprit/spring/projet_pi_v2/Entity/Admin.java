@@ -9,9 +9,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ToString
-@AllArgsConstructor @NoArgsConstructor
 public class Admin extends User {
 
-    String role;
+    public Admin() {
+        this.setRole(Role.ROLE_ADMIN);
+    }
 }
-
