@@ -39,6 +39,7 @@ public class NotificationServiceImpl implements NotificationService {
 
             Notification notification = Notification.builder()
                     .message(notificationDTO.getMessage())
+                    .title(notificationDTO.getTitle())
                     .type(notificationDTO.getType())
                     .createdAt(LocalDateTime.now())
                     .isRead(false)
@@ -134,6 +135,7 @@ public class NotificationServiceImpl implements NotificationService {
         return NotificationDTO.builder()
                 .id(notification.getId())
                 .message(notification.getMessage())
+                .title(notification.getTitle())
                 .type(notification.getType())
                 .createdAt(notification.getCreatedAt())
                 .isRead(notification.getIsRead())

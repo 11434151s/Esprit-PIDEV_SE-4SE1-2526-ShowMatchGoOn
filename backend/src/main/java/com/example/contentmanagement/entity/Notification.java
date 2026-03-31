@@ -22,6 +22,8 @@ public class Notification {
     @NotBlank(message = "Message is mandatory")
     private String message;
 
+    private String title;
+
     @NotBlank(message = "Type is mandatory")
     @Pattern(regexp = "INFO|SUCCESS|WARNING|ERROR", message = "Type must be INFO, SUCCESS, WARNING, or ERROR")
     private String type;

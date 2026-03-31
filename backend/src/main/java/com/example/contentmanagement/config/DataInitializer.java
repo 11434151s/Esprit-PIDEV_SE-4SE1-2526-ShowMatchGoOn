@@ -24,10 +24,12 @@ public class DataInitializer implements CommandLineRunner {
     private final FilmRepository filmRepository;
     private final SeriesRepository seriesRepository;
     private final DocumentaryRepository documentaryRepository;
+    private final CategoryRepository categoryRepository;
 
     @Override
     public void run(String... args) {
         initializeRolesAndUsers();
+        initializeCategories();
         initializeGenresAndContent();
     }
 
@@ -143,6 +145,37 @@ public class DataInitializer implements CommandLineRunner {
                 userRepository.saveAll(Arrays.asList(admin, moderator, publisher, user, viewer));
                 log.info("✓ Created 5 demo users");
             }
+        }
+    }
+
+    private void initializeCategories() {
+        if (categoryRepository.count() == 0) {
+            log.info("Initializing default categories...");
+
+            Category movieCategory = categoryRepository.save(Category.builder()
+                    .name("Movie")
+                    .description("All movie categories")
+                    .contentType("MOVIE")
+                    .build());
+            log.info("✓ Created Movie category: {}", movieCategory.getId());
+
+            Category seriesCategory = categoryRepository.save(Category.builder()
+                    .name("Series")
+                    .description("All series categories")
+                    .contentType("SERIES")
+                    .build());
+            log.info("✓ Created Series category: {}", seriesCategory.getId());
+
+            Category documentaryCategory = categoryRepository.save(Category.builder()
+                    .name("Documentary")
+                    .description("All documentary categories")
+                    .contentType("DOCUMENTARY")
+                    .build());
+            log.info("✓ Created Documentary category: {}", documentaryCategory.getId());
+
+            log.info("✓ Created 3 default categories");
+        } else {
+            log.info("Categories already exist. Skipping category initialization.");
         }
     }
 

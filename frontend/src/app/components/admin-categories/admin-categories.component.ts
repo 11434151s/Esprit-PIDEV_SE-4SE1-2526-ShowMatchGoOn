@@ -47,20 +47,14 @@ export class AdminCategoriesComponent implements OnInit {
       .replace(/[\u200B-\u200D\uFEFF]/g, '')
       .trim();
 
+    const id = String(data['id'] ?? data['_id'] ?? '').trim();
+    const name = clean(data['name'] ?? data['categoryName'] ?? data['title']);
+    const description = clean(data['description'] ?? data['details']);
+
+    // Don't create default values - only return actual data
     const rawType = clean(data['contentType'] ?? data['type'] ?? 'MOVIE').toUpperCase();
     const contentType: 'MOVIE' | 'SERIES' | 'DOCUMENTARY' =
       rawType === 'SERIES' || rawType === 'DOCUMENTARY' ? rawType : 'MOVIE';
-
-    const id = String(data['id'] ?? data['_id'] ?? '').trim();
-    const defaultName = contentType === 'SERIES' ? 'Series' : contentType === 'DOCUMENTARY' ? 'Documentary' : 'Movie';
-    const defaultDescription = contentType === 'SERIES'
-      ? 'All series categories'
-      : contentType === 'DOCUMENTARY'
-        ? 'All documentary categories'
-        : 'All movie categories';
-
-    const name = clean(data['name'] ?? data['categoryName'] ?? data['title']) || defaultName;
-    const description = clean(data['description'] ?? data['details']) || defaultDescription;
 
     return {
       id: id || undefined,
@@ -93,8 +87,7 @@ export class AdminCategoriesComponent implements OnInit {
           CustomValidators.maxLength(500),
           CustomValidators.noLeadingTrailingWhitespace
         ]
-      ],
-      contentType: ['MOVIE', [Validators.required]]
+      ]
     });
   }
 
@@ -108,10 +101,21 @@ export class AdminCategoriesComponent implements OnInit {
 
     this.contentService.getAllCategories().subscribe({
       next: (data) => {
-        const normalized = (Array.isArray(data) ? data : []).map(item => this.normalizeCategory(item));
+        const normalized = (Array.isArray(data) ? data : [])
+          .map(item => this.normalizeCategory(item))
+          .filter(category => {
+            // Only include categories with valid, non-empty names and descriptions
+            return category.name && 
+                   category.name.trim().length > 0 && 
+                   category.description && 
+                   category.description.trim().length > 0;
+          });
         this.categoryList.set(normalized);
         this.loading.set(false);
         console.log(`✓ Loaded ${normalized.length} category(ies)`);
+        if (data.length > normalized.length) {
+          console.warn(`⚠ ${data.length - normalized.length} invalid category(ies) were filtered out`);
+        }
       },
       error: (err) => {
         const errorMessage = err.message || 'Failed to load categories';
@@ -130,8 +134,7 @@ export class AdminCategoriesComponent implements OnInit {
     this.editingId.set(null);
     this.categoryForm.reset({
       name: '',
-      description: '',
-      contentType: 'MOVIE'
+      description: ''
     });
     this.showForm.set(true);
   }
@@ -145,8 +148,7 @@ export class AdminCategoriesComponent implements OnInit {
     this.editingId.set(null);
     this.categoryForm.reset({
       name: '',
-      description: '',
-      contentType: 'MOVIE'
+      description: ''
     });
   }
 
@@ -163,8 +165,7 @@ export class AdminCategoriesComponent implements OnInit {
     this.editingId.set(category.id);
     this.categoryForm.patchValue({
       name: category.name,
-      description: category.description,
-      contentType: category.contentType || 'MOVIE'
+      description: category.description
     });
     this.showForm.set(true);
   }
@@ -204,8 +205,7 @@ export class AdminCategoriesComponent implements OnInit {
    */
   private createCategory(category: CategoryDTO) {
     const payload: CategoryDTO = {
-      ...category,
-      contentType: this.normalizeContentType(category.contentType)
+      ...category
     };
 
     this.contentService.createCategory(payload).subscribe({
@@ -232,8 +232,7 @@ export class AdminCategoriesComponent implements OnInit {
    */
   private updateCategory(id: string, category: CategoryDTO) {
     const payload: CategoryDTO = {
-      ...category,
-      contentType: this.normalizeContentType(category.contentType)
+      ...category
     };
 
     this.contentService.updateCategory(id, payload).subscribe({
@@ -318,12 +317,5 @@ export class AdminCategoriesComponent implements OnInit {
   hasError(fieldName: string): boolean {
     const field = this.categoryForm.get(fieldName);
     return !!(field && field.invalid && field.touched);
-  }
-
-  formatContentType(type?: string): string {
-    if (!type) return 'Movie';
-    if (type === 'SERIES') return 'Series';
-    if (type === 'DOCUMENTARY') return 'Documentary';
-    return 'Movie';
   }
 }
