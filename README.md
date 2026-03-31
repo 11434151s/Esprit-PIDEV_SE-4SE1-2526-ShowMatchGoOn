@@ -13,6 +13,9 @@ Elle centralise le streaming et la réservation de cinéma, propose des recomman
 - Authentification sécurisée (JWT)
 - Gestion complète (CRUD) : Cinema, Salle, Seance, Reservation
 - Communication temps réel Frontend ↔ Backend via REST APIs
+- participation a des session watchparty
+- gagner des points de fidelité
+- ...
 
 ---
 
@@ -74,6 +77,8 @@ Année universitaire : 2025–2026
    - `GET /api/salles`
    - `GET /api/seances`
    - `GET /api/reservations`
+   - `GET /api/abonnements`
+   - `GET /api/feedback`
 
 ### 2. Frontend (Angular)
 ```bash
