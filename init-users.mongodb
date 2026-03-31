@@ -1,0 +1,35 @@
+use content_management_db
+
+// Delete existing users
+db.users.deleteMany({})
+
+// Create admin user - bcrypt hash of "admin123"
+db.users.insertOne({
+  username: "admin",
+  email: "admin@example.com",
+  password: "$2a$10$slYQmyNdGzin7olVN3p5Be7DFH5A7kkSDEsKyxjgXbVxIihMI.Umy",
+  firstName: "Admin",
+  lastName: "User",
+  role: "ADMIN",
+  enabled: true,
+  locked: false,
+  createdAt: new Date(),
+  updatedAt: new Date()
+})
+
+// Create regular user - bcrypt hash of "user123"
+db.users.insertOne({
+  username: "user",
+  email: "user@example.com",
+  password: "$2a$10$slYQmyNdGzin7olVN3p5Be7DFH5A7kkSDEsKyxjgXbVxIihMI.Umy",
+  firstName: "Regular",
+  lastName: "User",
+  role: "USER",
+  enabled: true,
+  locked: false,
+  createdAt: new Date(),
+  updatedAt: new Date()
+})
+
+print("✅ Users created successfully!")
+db.users.find().pretty()

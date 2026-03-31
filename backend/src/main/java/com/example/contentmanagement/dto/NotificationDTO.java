@@ -1,7 +1,6 @@
 package com.example.contentmanagement.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -18,7 +17,7 @@ public class NotificationDTO {
     private String message;
 
     @NotBlank(message = "Type is mandatory")
-    @Pattern(regexp = "INTERNAL|EMAIL|SMS", message = "Type must be INTERNAL, EMAIL, or SMS")
+    @Pattern(regexp = "INFO|SUCCESS|WARNING|ERROR", message = "Type must be INFO, SUCCESS, WARNING, or ERROR")
     private String type;
 
     private LocalDateTime createdAt;
@@ -26,7 +25,6 @@ public class NotificationDTO {
     @Builder.Default
     private Boolean isRead = false;
 
-    @NotNull(message = "User ID is mandatory")
     private String userId;
 
     private String username;

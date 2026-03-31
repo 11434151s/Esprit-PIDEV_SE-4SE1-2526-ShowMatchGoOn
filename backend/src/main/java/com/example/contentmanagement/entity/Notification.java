@@ -23,7 +23,7 @@ public class Notification {
     private String message;
 
     @NotBlank(message = "Type is mandatory")
-    @Pattern(regexp = "INTERNAL|EMAIL|SMS", message = "Type must be INTERNAL, EMAIL, or SMS")
+    @Pattern(regexp = "INFO|SUCCESS|WARNING|ERROR", message = "Type must be INFO, SUCCESS, WARNING, or ERROR")
     private String type;
 
     private LocalDateTime createdAt;

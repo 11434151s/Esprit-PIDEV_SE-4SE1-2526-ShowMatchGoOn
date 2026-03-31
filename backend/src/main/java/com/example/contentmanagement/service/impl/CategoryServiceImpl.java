@@ -20,8 +20,14 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public CategoryDTO createCategory(CategoryDTO categoryDTO) {
+        String contentType = categoryDTO.getContentType() == null || categoryDTO.getContentType().isBlank()
+            ? "MOVIE"
+            : categoryDTO.getContentType();
+
         Category category = Category.builder()
                 .name(categoryDTO.getName())
+                .description(categoryDTO.getDescription())
+            .contentType(contentType)
                 .build();
         Category savedCategory = categoryRepository.save(category);
         return mapToDTO(savedCategory);
@@ -47,6 +53,12 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
         category.setName(categoryDTO.getName());
+        category.setDescription(categoryDTO.getDescription());
+        category.setContentType(
+            categoryDTO.getContentType() == null || categoryDTO.getContentType().isBlank()
+                ? "MOVIE"
+                : categoryDTO.getContentType()
+        );
         Category updatedCategory = categoryRepository.save(category);
         return mapToDTO(updatedCategory);
     }
@@ -63,6 +75,8 @@ public class CategoryServiceImpl implements CategoryService {
         return CategoryDTO.builder()
                 .id(category.getId())
                 .name(category.getName())
+                .description(category.getDescription())
+                .contentType(category.getContentType() == null || category.getContentType().isBlank() ? "MOVIE" : category.getContentType())
                 .build();
     }
 }

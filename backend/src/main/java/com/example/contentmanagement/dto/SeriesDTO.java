@@ -13,8 +13,10 @@ public class SeriesDTO extends ContentDTO {
     @NotNull(message = "Number of seasons is mandatory")
     @Positive(message = "Number of seasons must be positive")
     private Integer numberOfSeasons;
+
     @NotNull(message = "Number of episodes is mandatory")
     @Positive(message = "Number of episodes must be positive")
     private Integer numberOfEpisodes;
+
     private Boolean isCompleted;
 }

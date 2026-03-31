@@ -1,6 +1,7 @@
 import { Component, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Observable } from 'rxjs';
 import {
   LucideAngularModule,
   Search,
@@ -13,20 +14,8 @@ import {
   Download,
   X,
 } from 'lucide-angular';
-import { ContentService } from '../../services/api.service';
+import { ContentService, ContentDTO, GenreDTO, CategoryDTO } from '../../services/api.service';
 import { CustomValidators } from '../../services/validators';
-
-interface Content {
-  id: string;
-  title: string;
-  platform: string;
-  genre: string;
-  rating: number;
-  views: number;
-  status: 'active' | 'hidden' | 'scheduled';
-  hiddenGem: boolean;
-  releaseDate: string;
-}
 
 @Component({
   selector: 'app-admin-content',
@@ -49,8 +38,11 @@ export class AdminContentComponent implements OnInit {
   searchQuery = signal('');
   filterPlatform = signal('all');
   filterStatus = signal('all');
-  
-  contentList = signal<Content[]>([]);
+  contentType = signal<'FILM' | 'SERIES' | 'DOCUMENTARY'>('FILM');
+
+  contentList = signal<(ContentDTO & { platform?: string; genre?: string; rating?: number; views?: number; status?: string; hiddenGem?: boolean; })[]>([]);
+  genres = signal<GenreDTO[]>([]);
+  categories = signal<CategoryDTO[]>([]);
   loading = signal(false);
   error = signal<string | null>(null);
   showForm = signal(false);
@@ -65,18 +57,168 @@ export class AdminContentComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.loadGenres();
+    this.loadCategories();
     this.loadAllContent();
+  }
+
+  loadCategories() {
+    this.contentService.getAllCategories().subscribe({
+      next: (data) => {
+        const normalized = (Array.isArray(data) ? data : [])
+          .map((item) => ({
+            id: item.id,
+            name: (item.name || '').trim(),
+            description: item.description || '',
+            contentType: item.contentType || 'MOVIE'
+          }))
+          .filter(item => !!item.id && !!item.name);
+
+        this.categories.set(normalized);
+
+        // Ensure selector has a value in create mode.
+        if (!this.editingId() && !this.contentForm.get('selectedCategoryId')?.value && normalized.length > 0) {
+          this.contentForm.patchValue({ selectedCategoryId: normalized[0].id }, { emitEvent: true });
+        }
+      },
+      error: (err) => {
+        console.error('Error loading categories:', err);
+      }
+    });
+  }
+
+  loadGenres() {
+    this.contentService.getAllGenres().subscribe({
+      next: (data) => {
+        this.genres.set(data);
+      },
+      error: (err) => {
+        console.error('Error loading genres:', err);
+        this.error.set('Failed to load genres');
+      }
+    });
   }
 
   initializeForm() {
     this.contentForm = this.fb.group({
-      title: ['', [Validators.required, CustomValidators.minLength(3), CustomValidators.maxLength(255)]],
-      description: ['', [Validators.required, CustomValidators.minLength(10)]],
-      releaseDate: ['', [CustomValidators.dateFormat, CustomValidators.pastDateValidator]],
-      duration: ['', [CustomValidators.numeric, CustomValidators.minValue(1)]],
-      genre: ['', Validators.required],
-      status: ['active', Validators.required],
-      hiddenGem: [false],
+      title: ['', [
+        Validators.required,
+        CustomValidators.minLength(3),
+        CustomValidators.maxLength(255),
+        CustomValidators.noLeadingTrailingWhitespace
+      ]],
+      description: ['', [
+        Validators.required,
+        CustomValidators.minLength(10),
+        CustomValidators.maxLength(1000),
+        CustomValidators.noLeadingTrailingWhitespace
+      ]],
+      releaseDate: ['', Validators.required],
+      category: ['MOVIE', Validators.required],
+      selectedCategoryId: ['', Validators.required],
+      contentType: ['FILM', Validators.required],
+      genreIds: [[], []],  // Multi-select field for genre IDs
+      // Film fields
+      durationInMinutes: [null],
+      director: ['', [
+        CustomValidators.noSpecialCharacters,
+        CustomValidators.noLeadingTrailingWhitespace
+      ]],
+      // Series fields
+      numberOfSeasons: [null],
+      numberOfEpisodes: [null],
+      isCompleted: [false],
+      // Documentary fields
+      topic: ['', [
+        CustomValidators.noSpecialCharacters,
+        CustomValidators.noLeadingTrailingWhitespace
+      ]],
+      narrator: ['', [
+        CustomValidators.noSpecialCharacters,
+        CustomValidators.noLeadingTrailingWhitespace
+      ]],
+    });
+
+    // Listen to content type changes to update validators
+    this.contentForm.get('contentType')?.valueChanges.subscribe(type => {
+      this.updateConditionalValidators(type);
+    });
+
+    this.contentForm.get('selectedCategoryId')?.valueChanges.subscribe((categoryId: string) => {
+      const selected = this.categories().find(c => c.id === categoryId);
+      const enumType = (selected?.contentType === 'SERIES' || selected?.contentType === 'DOCUMENTARY')
+        ? selected.contentType
+        : 'MOVIE';
+
+      const contentTypeValue = enumType === 'MOVIE' ? 'FILM' : enumType;
+
+      this.contentForm.patchValue({ category: enumType, contentType: contentTypeValue }, { emitEvent: false });
+      this.contentType.set(contentTypeValue as 'FILM' | 'SERIES' | 'DOCUMENTARY');
+      this.updateConditionalValidators(contentTypeValue);
+    });
+
+    // Set initial validators
+    this.updateConditionalValidators('FILM');
+  }
+
+  private updateConditionalValidators(contentType: string) {
+    const durationControl = this.contentForm.get('durationInMinutes');
+    const directorControl = this.contentForm.get('director');
+    const seasonsControl = this.contentForm.get('numberOfSeasons');
+    const episodesControl = this.contentForm.get('numberOfEpisodes');
+    const topicControl = this.contentForm.get('topic');
+    const narratorControl = this.contentForm.get('narrator');
+
+    // Clear all conditional validators first
+    [durationControl, directorControl, seasonsControl, episodesControl, topicControl, narratorControl].forEach(ctrl => {
+      ctrl?.clearValidators();
+      ctrl?.updateValueAndValidity({ emitEvent: false });
+    });
+
+    // Set validators based on content type
+    if (contentType === 'FILM') {
+      durationControl?.setValidators([
+        Validators.required,
+        Validators.min(1),
+        CustomValidators.positiveInteger
+      ]);
+      directorControl?.setValidators([
+        Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(100),
+        CustomValidators.noSpecialCharacters,
+        CustomValidators.noLeadingTrailingWhitespace
+      ]);
+    } else if (contentType === 'SERIES') {
+      seasonsControl?.setValidators([
+        Validators.required,
+        Validators.min(1),
+        CustomValidators.positiveInteger
+      ]);
+      episodesControl?.setValidators([
+        Validators.required,
+        Validators.min(1),
+        CustomValidators.positiveInteger
+      ]);
+    } else if (contentType === 'DOCUMENTARY') {
+      topicControl?.setValidators([
+        Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(100),
+        CustomValidators.noSpecialCharacters,
+        CustomValidators.noLeadingTrailingWhitespace
+      ]);
+      narratorControl?.setValidators([
+        Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(100),
+        CustomValidators.noSpecialCharacters,
+        CustomValidators.noLeadingTrailingWhitespace
+      ]);
+    }
+
+    [durationControl, directorControl, seasonsControl, episodesControl, topicControl, narratorControl].forEach(ctrl => {
+      ctrl?.updateValueAndValidity({ emitEvent: false });
     });
   }
 
@@ -85,23 +227,26 @@ export class AdminContentComponent implements OnInit {
     this.error.set(null);
     this.contentService.getAllContent().subscribe({
       next: (data) => {
-        // Map backend response to Content interface
-        const mappedContent = data.map((item: any) => ({
-          id: item.id,
-          title: item.title,
-          platform: item.platform || 'Unknown',
-          genre: item.genre || 'Unknown',
-          rating: item.rating || 0,
-          views: item.views || 0,
-          status: item.status || 'active',
-          hiddenGem: item.hiddenGem || false,
-          releaseDate: item.releaseDate || new Date().toISOString().split('T')[0],
-        }));
-        this.contentList.set(mappedContent);
+        // Map genre IDs to genre objects for display
+        const enhancedData = data.map(item => {
+          const genreNames = (item.genreIds || []).map(id => this.getGenreName(id));
+          return {
+            ...item,
+            platform: item.category || 'Unknown',
+            genres: genreNames,
+            genre: genreNames.length > 0 ? genreNames[0] : 'Unknown',
+            rating: 0,
+            views: 0,
+            status: 'active',
+            hiddenGem: false,
+          };
+        });
+        this.contentList.set(enhancedData);
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set('Failed to load content: ' + err.message);
+        const errorMsg = err?.message || 'Failed to connect to server';
+        this.error.set('Failed to load content: ' + errorMsg);
         this.loading.set(false);
         console.error('Error loading content:', err);
       },
@@ -110,7 +255,14 @@ export class AdminContentComponent implements OnInit {
 
   openForm() {
     this.editingId.set(null);
-    this.contentForm.reset({ status: 'active', hiddenGem: false });
+    this.contentType.set('FILM');
+    this.initializeForm();
+    this.contentForm.reset({
+      category: 'MOVIE',
+      contentType: 'FILM',
+      selectedCategoryId: this.categories()[0]?.id || '',
+      isCompleted: false
+    });
     this.showForm.set(true);
   }
 
@@ -120,21 +272,82 @@ export class AdminContentComponent implements OnInit {
     this.contentForm.reset();
   }
 
-  editContent(content: Content) {
-    this.editingId.set(content.id);
+  editContent(content: any) {
+    this.editingId.set(content.id || '');
+    
+    // Determine content type from the data
+    let contentType = content.contentType || 'FILM';
+    if (contentType === 'FILM' && content.durationInMinutes === undefined && content.numberOfSeasons !== undefined) {
+      contentType = 'SERIES';
+    } else if (contentType === 'FILM' && content.topic !== undefined) {
+      contentType = 'DOCUMENTARY';
+    }
+    
+    this.contentType.set(contentType as any);
+    
+    // Reset form with new content type validators
+    this.initializeForm();
+    this.updateConditionalValidators(contentType);
+    
+    // Map category enum value - handle both old and new formats
+    const categoryValue = content.category || (
+      contentType === 'SERIES' ? 'SERIES' : 
+      contentType === 'DOCUMENTARY' ? 'DOCUMENTARY' : 
+      'MOVIE'
+    );
+    
+    // Patch the form with existing values
+    const matchingCategory = this.categories().find(c => c.contentType === categoryValue);
+
     this.contentForm.patchValue({
       title: content.title,
-      description: content.title, // Using title as description placeholder
-      releaseDate: content.releaseDate,
-      genre: content.genre,
-      status: content.status,
-      hiddenGem: content.hiddenGem,
-    });
+      description: content.description,
+      releaseDate: this.toDateInputValue(content.releaseDate),
+      category: categoryValue,
+      selectedCategoryId: matchingCategory?.id || this.categories()[0]?.id || '',
+      contentType: contentType,
+      genreIds: content.genreIds ?? [],
+      durationInMinutes: content.durationInMinutes ?? null,
+      director: content.director ?? '',
+      numberOfSeasons: content.numberOfSeasons ?? null,
+      numberOfEpisodes: content.numberOfEpisodes ?? null,
+      isCompleted: content.isCompleted ?? false,
+      topic: content.topic ?? '',
+      narrator: content.narrator ?? '',
+    }, { emitEvent: false });
+    
     this.showForm.set(true);
+  }
+
+  private toDateInputValue(value: unknown): string {
+    if (!value) {
+      return '';
+    }
+
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) {
+        return '';
+      }
+
+      // HTML date input expects yyyy-MM-dd
+      if (trimmed.length >= 10) {
+        return trimmed.substring(0, 10);
+      }
+
+      return trimmed;
+    }
+
+    if (value instanceof Date) {
+      return value.toISOString().substring(0, 10);
+    }
+
+    return '';
   }
 
   saveContent() {
     if (!this.contentForm.valid) {
+      // Mark all fields as touched to show validation errors
       Object.keys(this.contentForm.controls).forEach(key => {
         const control = this.contentForm.get(key);
         if (control && control.invalid) {
@@ -145,7 +358,10 @@ export class AdminContentComponent implements OnInit {
     }
 
     const id = this.editingId();
-    const formData = this.contentForm.value;
+    const formData = {
+      ...this.contentForm.value,
+      contentType: this.contentForm.get('contentType')?.value
+    };
 
     if (id) {
       this.updateContent(id, formData);
@@ -154,82 +370,173 @@ export class AdminContentComponent implements OnInit {
     }
   }
 
-  createContent(data: any) {
+  private isFieldRequired(fieldName: string): boolean {
+    const control = this.contentForm.get(fieldName);
+    return control?.hasError('required') || false;
+  }
+
+  createContent(data: ContentDTO) {
     this.loading.set(true);
-    this.contentService.createFilm(data).subscribe({
-      next: (response) => {
-        const newContent: Content = {
-          id: response.id || Math.random().toString(),
-          title: response.title,
-          platform: data.platform || 'Unknown',
-          genre: response.genre,
+    const type = this.contentType();
+
+    // Filter data to only include relevant fields for the content type
+    let filteredData: any = {
+      title: data.title,
+      description: data.description,
+      releaseDate: data.releaseDate,
+      category: data.category,
+      genreIds: data.genreIds || [],
+    };
+
+    // Add type-specific fields
+    const formData = data as any;
+    if (type === 'FILM') {
+      filteredData.durationInMinutes = formData.durationInMinutes;
+      filteredData.director = formData.director;
+    } else if (type === 'SERIES') {
+      filteredData.numberOfSeasons = formData.numberOfSeasons;
+      filteredData.numberOfEpisodes = formData.numberOfEpisodes;
+      filteredData.isCompleted = formData.isCompleted;
+    } else if (type === 'DOCUMENTARY') {
+      filteredData.topic = formData.topic;
+      filteredData.narrator = formData.narrator;
+    }
+
+    // Select appropriate service method based on content type
+    let request$: Observable<ContentDTO>;
+    if (type === 'FILM') {
+      request$ = this.contentService.createFilm(filteredData as any);
+    } else if (type === 'SERIES') {
+      request$ = this.contentService.createSeries(filteredData as any);
+    } else {
+      request$ = this.contentService.createDocumentary(filteredData as any);
+    }
+
+    request$.subscribe({
+      next: (response: ContentDTO) => {
+        const enrichedResponse = {
+          ...response,
+          contentType: type,
+          platform: response.category || 'Unknown',
+          genres: (response.genreIds || []).map(id => this.getGenreName(id)),
+          genre: 'Unknown',
           rating: 0,
           views: 0,
-          status: data.status,
-          hiddenGem: data.hiddenGem,
-          releaseDate: response.releaseDate,
+          status: 'active',
+          hiddenGem: false,
         };
-        this.contentList.set([...this.contentList(), newContent]);
+        this.contentList.set([...this.contentList(), enrichedResponse]);
         this.closeForm();
         this.loading.set(false);
-        alert('Content created successfully!');
       },
-      error: (err) => {
-        this.error.set('Failed to create content: ' + err.message);
+      error: (err: any) => {
         this.loading.set(false);
-        console.error('Error creating content:', err);
+        let errorMessage = `Failed to create ${type.toLowerCase()}`;
+        if (err.message) {
+          errorMessage += ': ' + err.message;
+        }
+        this.error.set(errorMessage);
+        console.error(`Error creating ${type.toLowerCase()}:`, err);
       },
     });
   }
 
-  updateContent(id: string, data: any) {
+  updateContent(id: string, data: ContentDTO) {
     this.loading.set(true);
-    this.contentService.updateFilm(id, data).subscribe({
-      next: (response) => {
+    const type = this.contentType();
+
+    // Filter data to only include relevant fields for the content type
+    let filteredData: any = {
+      title: data.title,
+      description: data.description,
+      releaseDate: data.releaseDate,
+      category: data.category,
+      genreIds: data.genreIds || [],
+    };
+
+    // Add type-specific fields
+    const formData = data as any;
+    if (type === 'FILM') {
+      filteredData.durationInMinutes = formData.durationInMinutes;
+      filteredData.director = formData.director;
+    } else if (type === 'SERIES') {
+      filteredData.numberOfSeasons = formData.numberOfSeasons;
+      filteredData.numberOfEpisodes = formData.numberOfEpisodes;
+      filteredData.isCompleted = formData.isCompleted;
+    } else if (type === 'DOCUMENTARY') {
+      filteredData.topic = formData.topic;
+      filteredData.narrator = formData.narrator;
+    }
+
+    // Select appropriate service method based on content type
+    let request$: Observable<ContentDTO>;
+    if (type === 'FILM') {
+      request$ = this.contentService.updateFilm(id, filteredData as any);
+    } else if (type === 'SERIES') {
+      request$ = this.contentService.updateSeries(id, filteredData as any);
+    } else {
+      request$ = this.contentService.updateDocumentary(id, filteredData as any);
+    }
+
+    request$.subscribe({
+      next: (response: ContentDTO) => {
+        const enrichedResponse = {
+          ...response,
+          contentType: type,
+          platform: response.category || 'Unknown',
+          genres: (response.genreIds || []).map(id => this.getGenreName(id)),
+          genre: 'Unknown',
+          rating: 0,
+          views: 0,
+          status: 'active',
+          hiddenGem: false,
+        };
         const updated = this.contentList().map(item =>
-          item.id === id ? {
-            ...item,
-            ...response,
-            status: data.status,
-            hiddenGem: data.hiddenGem,
-          } : item
+          item.id === id ? enrichedResponse : item
         );
         this.contentList.set(updated);
         this.closeForm();
         this.loading.set(false);
-        alert('Content updated successfully!');
       },
-      error: (err) => {
-        this.error.set('Failed to update content: ' + err.message);
+      error: (err: any) => {
         this.loading.set(false);
-        console.error('Error updating content:', err);
+        let errorMessage = `Failed to update ${type.toLowerCase()}`;
+        if (err.message) {
+          errorMessage += ': ' + err.message;
+        }
+        this.error.set(errorMessage);
+        console.error(`Error updating ${type.toLowerCase()}:`, err);
       },
     });
   }
 
-  deleteContent(id: string) {
+  deleteContent(id: string | undefined) {
+    if (!id) return;
     if (confirm('Are you sure you want to delete this content?')) {
       this.loading.set(true);
       this.contentService.deleteContent(id).subscribe({
         next: () => {
           this.contentList.set(this.contentList().filter(item => item.id !== id));
           this.loading.set(false);
-          alert('Content deleted successfully!');
         },
-        error: (err) => {
-          this.error.set('Failed to delete content: ' + err.message);
+        error: (err: any) => {
           this.loading.set(false);
+          let errorMessage = 'Failed to delete content';
+          if (err.message) {
+            errorMessage = err.message;
+          }
+          this.error.set(errorMessage);
           console.error('Error deleting content:', err);
         },
       });
     }
   }
 
-  get content(): Content[] {
+  get content(): any[] {
     return this.contentList();
   }
 
-  get filteredContent(): Content[] {
+  get filteredContent(): any[] {
     return this.content.filter((item) => {
       const matchesSearch = item.title.toLowerCase().includes(this.searchQuery().toLowerCase());
       const matchesPlatform = this.filterPlatform() === 'all' || item.platform === this.filterPlatform();
@@ -237,7 +544,6 @@ export class AdminContentComponent implements OnInit {
       return matchesSearch && matchesPlatform && matchesStatus;
     });
   }
-
 
   get activeCount(): number {
     return this.content.filter((c) => c.status === 'active').length;
@@ -249,8 +555,32 @@ export class AdminContentComponent implements OnInit {
 
   get averageRating(): number {
     if (this.content.length === 0) return 0;
-    const total = this.content.reduce((sum, c) => sum + c.rating, 0);
+    const total = this.content.reduce((sum, c) => sum + (c.rating || 0), 0);
     return Math.round((total / this.content.length) * 10) / 10;
+  }
+
+  toggleGenre(genre: GenreDTO) {
+    const genreIdsControl = this.contentForm.get('genreIds');
+    if (!genreIdsControl || !genre.id) return;
+
+    const currentGenreIds = genreIdsControl.value || [];
+    if (currentGenreIds.includes(genre.id)) {
+      genreIdsControl.setValue(currentGenreIds.filter((id: string) => id !== genre.id));
+    } else {
+      genreIdsControl.setValue([...currentGenreIds, genre.id]);
+    }
+  }
+
+  isGenreSelected(genreId?: string): boolean {
+    if (!genreId) return false;
+    const genreIdsControl = this.contentForm.get('genreIds');
+    const currentGenreIds = genreIdsControl?.value || [];
+    return currentGenreIds.includes(genreId);
+  }
+
+  getGenreName(genreId: string): string {
+    const genre = this.genres().find(g => g.id === genreId);
+    return genre?.name || 'Unknown Genre';
   }
 
   getStatusColor(status: string): string {
@@ -276,9 +606,6 @@ export class AdminContentComponent implements OnInit {
     if (errors['maxlength']) return `${fieldName} must not exceed ${errors['maxlength'].requiredLength} characters`;
     if (errors['numeric']) return `${fieldName} must be a valid number`;
     if (errors['minvalue']) return `${fieldName} must be at least ${errors['minvalue'].min}`;
-    if (errors['dateformat']) return 'Date must be in YYYY-MM-DD format';
-    if (errors['pastdate']) return 'Release date cannot be in the past';
-    if (errors['futuredate']) return 'Release date cannot be in the future';
 
     return 'Invalid value';
   }

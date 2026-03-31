@@ -86,6 +86,7 @@
       <select
         [(ngModel)]="filterPlatform"
         (ngModelChange)="filterPlatform.set($event)"
+        title="Filter by platform"
         class="px-4 py-2 bg-[#0B0E14] border border-[#8B5CF6]/30 rounded-lg text-white focus:outline-none focus:border-[#8B5CF6]">
         <option value="all">All Platforms</option>
         <option value="Netflix">Netflix</option>
@@ -98,6 +99,7 @@
       <select
         [(ngModel)]="filterStatus"
         (ngModelChange)="filterStatus.set($event)"
+        title="Filter by status"
         class="px-4 py-2 bg-[#0B0E14] border border-[#8B5CF6]/30 rounded-lg text-white focus:outline-none focus:border-[#8B5CF6]">
         <option value="all">All Status</option>
         <option value="active">Active</option>
@@ -139,7 +141,14 @@
               </div>
             </td>
             <td class="px-6 py-4 text-[#8B5CF6]">{{ item.platform }}</td>
-            <td class="px-6 py-4 text-gray-400">{{ item.genre }}</td>
+            <td class="px-6 py-4">
+              <div *ngIf="item.genres && item.genres.length > 0" class="flex flex-wrap gap-1">
+                <span *ngFor="let genre of item.genres" class="px-2 py-0.5 bg-[#8B5CF6]/20 text-[#8B5CF6] text-xs rounded border border-[#8B5CF6]">
+                  {{ genre }}
+                </span>
+              </div>
+              <span *ngIf="!item.genres || item.genres.length === 0" class="text-gray-400">{{ item.genre }}</span>
+            </td>
             <td class="px-6 py-4">
               <div class="flex items-center gap-1 text-white">
                 <lucide-icon [img]="StarIcon" class="w-4 h-4 text-yellow-500 fill-yellow-500"></lucide-icon>
@@ -155,10 +164,10 @@
             <td class="px-6 py-4 text-gray-400">{{ item.releaseDate }}</td>
             <td class="px-6 py-4">
               <div class="flex items-center justify-end gap-2">
-                <button (click)="editContent(item)" class="p-2 text-gray-400 hover:text-[#8B5CF6] hover:bg-[#8B5CF6]/10 rounded-lg transition-all">
+                <button (click)="editContent(item)" title="Edit content" aria-label="Edit content" class="p-2 text-gray-400 hover:text-[#8B5CF6] hover:bg-[#8B5CF6]/10 rounded-lg transition-all">
                   <lucide-icon [img]="Edit2Icon" class="w-4 h-4"></lucide-icon>
                 </button>
-                <button (click)="deleteContent(item.id)" class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all">
+                <button (click)="deleteContent(item.id)" title="Delete content" aria-label="Delete content" class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all">
                   <lucide-icon [img]="Trash2Icon" class="w-4 h-4"></lucide-icon>
                 </button>
               </div>
@@ -176,7 +185,7 @@
     <!-- Modal Header -->
     <div class="flex items-center justify-between p-6 border-b border-[#8B5CF6]/20">
       <h2 class="text-2xl text-white">{{ editingId() ? 'Edit Content' : 'Add New Content' }}</h2>
-      <button (click)="closeForm()" class="text-gray-400 hover:text-white">
+      <button (click)="closeForm()" title="Close form" aria-label="Close form" class="text-gray-400 hover:text-white">
         <lucide-icon [img]="CloseIcon" class="w-5 h-5"></lucide-icon>
       </button>
     </div>
@@ -185,7 +194,10 @@
     <form [formGroup]="contentForm" class="p-6 space-y-4">
       <!-- Title -->
       <div>
-        <label class="block text-sm text-gray-300 mb-2">Title <span class="text-red-500">*</span></label>
+        <label class="block text-sm text-gray-300 mb-2">
+          Title 
+          <span *ngIf="contentForm.get('title')?.invalid && contentForm.get('title')?.touched" class="text-red-500">*</span>
+        </label>
         <input
           type="text"
           formControlName="title"
@@ -200,7 +212,10 @@
 
       <!-- Description -->
       <div>
-        <label class="block text-sm text-gray-300 mb-2">Description <span class="text-red-500">*</span></label>
+        <label class="block text-sm text-gray-300 mb-2">
+          Description 
+          <span *ngIf="contentForm.get('description')?.invalid && contentForm.get('description')?.touched" class="text-red-500">*</span>
+        </label>
         <textarea
           formControlName="description"
           placeholder="Content description"
@@ -215,10 +230,14 @@
 
       <!-- Release Date -->
       <div>
-        <label class="block text-sm text-gray-300 mb-2">Release Date <span class="text-red-500">*</span></label>
+        <label class="block text-sm text-gray-300 mb-2">
+          Release Date 
+          <span *ngIf="contentForm.get('releaseDate')?.invalid && contentForm.get('releaseDate')?.touched" class="text-red-500">*</span>
+        </label>
         <input
           type="date"
           formControlName="releaseDate"
+          title="Release date"
           class="w-full px-4 py-2 bg-[#0B0E14] border border-[#8B5CF6]/30 rounded-lg text-white focus:outline-none focus:border-[#8B5CF6]"
           [class.border-red-500]="contentForm.get('releaseDate')?.invalid && contentForm.get('releaseDate')?.touched"
         />
@@ -227,66 +246,153 @@
         </p>
       </div>
 
-      <!-- Duration -->
+      <!-- Category -->
       <div>
-        <label class="block text-sm text-gray-300 mb-2">Duration (minutes) <span class="text-red-500">*</span></label>
+        <label class="block text-sm text-gray-300 mb-2">
+          Category 
+          <span *ngIf="contentForm.get('selectedCategoryId')?.invalid && contentForm.get('selectedCategoryId')?.touched" class="text-red-500">*</span>
+        </label>
+        <select
+          formControlName="selectedCategoryId"
+          title="Select category"
+          class="w-full px-4 py-2 bg-[#0B0E14] border border-[#8B5CF6]/30 rounded-lg text-white focus:outline-none focus:border-[#8B5CF6]"
+          [class.border-red-500]="contentForm.get('selectedCategoryId')?.invalid && contentForm.get('selectedCategoryId')?.touched"
+        >
+          <option value="">-- Select Category --</option>
+          <option *ngFor="let cat of categories()" [value]="cat.id">{{ cat.name }}</option>
+        </select>
+        <p *ngIf="contentForm.get('selectedCategoryId')?.invalid && contentForm.get('selectedCategoryId')?.touched" class="text-red-500 text-sm mt-1">
+          {{ getFieldError('selectedCategoryId') }}
+        </p>
+      </div>
+
+      <!-- Genres -->
+      <div>
+        <label class="block text-sm text-gray-300 mb-2">Genres (Select multiple)</label>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+          <button 
+            *ngFor="let genre of genres()"
+            type="button"
+            (click)="toggleGenre(genre)"
+            [class]="isGenreSelected(genre.id) ? 'bg-[#8B5CF6] text-white border-[#8B5CF6]' : 'bg-[#0B0E14] text-gray-400 border-[#8B5CF6]/30'"
+            class="px-3 py-2 border rounded-lg text-sm transition-all"
+          >
+            {{ genre.name }}
+          </button>
+        </div>
+        <div *ngIf="contentForm.get('genreIds')?.value?.length > 0" class="mt-2 flex flex-wrap gap-2">
+          <span *ngFor="let genreId of contentForm.get('genreIds')?.value" class="px-2 py-1 bg-[#8B5CF6]/20 text-[#8B5CF6] rounded-lg text-xs border border-[#8B5CF6]">
+            {{ getGenreName(genreId) }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Duration (Film fields) -->
+      <div *ngIf="contentType() === 'FILM'">
+        <label class="block text-sm text-gray-300 mb-2">
+          Duration (minutes) 
+          <span *ngIf="contentForm.get('durationInMinutes')?.invalid && contentForm.get('durationInMinutes')?.touched" class="text-red-500">*</span>
+        </label>
         <input
           type="number"
-          formControlName="duration"
+          formControlName="durationInMinutes"
           placeholder="Duration in minutes"
           class="w-full px-4 py-2 bg-[#0B0E14] border border-[#8B5CF6]/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#8B5CF6]"
-          [class.border-red-500]="contentForm.get('duration')?.invalid && contentForm.get('duration')?.touched"
+          [class.border-red-500]="contentForm.get('durationInMinutes')?.invalid && contentForm.get('durationInMinutes')?.touched"
         />
-        <p *ngIf="contentForm.get('duration')?.invalid && contentForm.get('duration')?.touched" class="text-red-500 text-sm mt-1">
-          {{ getFieldError('duration') }}
+        <p *ngIf="contentForm.get('durationInMinutes')?.invalid && contentForm.get('durationInMinutes')?.touched" class="text-red-500 text-sm mt-1">
+          {{ getFieldError('durationInMinutes') }}
         </p>
       </div>
 
-      <!-- Genre -->
-      <div>
-        <label class="block text-sm text-gray-300 mb-2">Genre <span class="text-red-500">*</span></label>
-        <select
-          formControlName="genre"
-          class="w-full px-4 py-2 bg-[#0B0E14] border border-[#8B5CF6]/30 rounded-lg text-white focus:outline-none focus:border-[#8B5CF6]"
-          [class.border-red-500]="contentForm.get('genre')?.invalid && contentForm.get('genre')?.touched"
-        >
-          <option value="">-- Select Genre --</option>
-          <option value="Action">Action</option>
-          <option value="Comedy">Comedy</option>
-          <option value="Drama">Drama</option>
-          <option value="Horror">Horror</option>
-          <option value="Romance">Romance</option>
-          <option value="Sci-Fi">Sci-Fi</option>
-          <option value="Thriller">Thriller</option>
-          <option value="Documentary">Documentary</option>
-        </select>
-        <p *ngIf="contentForm.get('genre')?.invalid && contentForm.get('genre')?.touched" class="text-red-500 text-sm mt-1">
-          {{ getFieldError('genre') }}
-        </p>
-      </div>
-
-      <!-- Status -->
-      <div>
-        <label class="block text-sm text-gray-300 mb-2">Status</label>
-        <select
-          formControlName="status"
-          class="w-full px-4 py-2 bg-[#0B0E14] border border-[#8B5CF6]/30 rounded-lg text-white focus:outline-none focus:border-[#8B5CF6]"
-        >
-          <option value="active">Active</option>
-          <option value="hidden">Hidden</option>
-          <option value="scheduled">Scheduled</option>
-        </select>
-      </div>
-
-      <!-- Hidden Gem -->
-      <div class="flex items-center gap-3">
+      <!-- Director (Film fields) -->
+      <div *ngIf="contentType() === 'FILM'">
+        <label class="block text-sm text-gray-300 mb-2">
+          Director 
+          <span *ngIf="contentForm.get('director')?.invalid && contentForm.get('director')?.touched" class="text-red-500">*</span>
+        </label>
         <input
-          type="checkbox"
-          id="hiddenGem"
-          formControlName="hiddenGem"
-          class="w-4 h-4 rounded border-[#8B5CF6]/30 text-[#8B5CF6] focus:ring-[#8B5CF6]"
+          type="text"
+          formControlName="director"
+          placeholder="Director name"
+          class="w-full px-4 py-2 bg-[#0B0E14] border border-[#8B5CF6]/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#8B5CF6]"
+          [class.border-red-500]="contentForm.get('director')?.invalid && contentForm.get('director')?.touched"
         />
-        <label for="hiddenGem" class="text-sm text-gray-300">Mark as Hidden Gem</label>
+        <p *ngIf="contentForm.get('director')?.invalid && contentForm.get('director')?.touched" class="text-red-500 text-sm mt-1">
+          {{ getFieldError('director') }}
+        </p>
+      </div>
+
+      <!-- Number of Seasons (Series fields) -->
+      <div *ngIf="contentType() === 'SERIES'">
+        <label class="block text-sm text-gray-300 mb-2">
+          Number of Seasons 
+          <span *ngIf="contentForm.get('numberOfSeasons')?.invalid && contentForm.get('numberOfSeasons')?.touched" class="text-red-500">*</span>
+        </label>
+        <input
+          type="number"
+          formControlName="numberOfSeasons"
+          placeholder="Number of seasons"
+          class="w-full px-4 py-2 bg-[#0B0E14] border border-[#8B5CF6]/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#8B5CF6]"
+          [class.border-red-500]="contentForm.get('numberOfSeasons')?.invalid && contentForm.get('numberOfSeasons')?.touched"
+        />
+        <p *ngIf="contentForm.get('numberOfSeasons')?.invalid && contentForm.get('numberOfSeasons')?.touched" class="text-red-500 text-sm mt-1">
+          {{ getFieldError('numberOfSeasons') }}
+        </p>
+      </div>
+
+      <!-- Number of Episodes (Series fields) -->
+      <div *ngIf="contentType() === 'SERIES'">
+        <label class="block text-sm text-gray-300 mb-2">
+          Number of Episodes 
+          <span *ngIf="contentForm.get('numberOfEpisodes')?.invalid && contentForm.get('numberOfEpisodes')?.touched" class="text-red-500">*</span>
+        </label>
+        <input
+          type="number"
+          formControlName="numberOfEpisodes"
+          placeholder="Number of episodes"
+          class="w-full px-4 py-2 bg-[#0B0E14] border border-[#8B5CF6]/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#8B5CF6]"
+          [class.border-red-500]="contentForm.get('numberOfEpisodes')?.invalid && contentForm.get('numberOfEpisodes')?.touched"
+        />
+        <p *ngIf="contentForm.get('numberOfEpisodes')?.invalid && contentForm.get('numberOfEpisodes')?.touched" class="text-red-500 text-sm mt-1">
+          {{ getFieldError('numberOfEpisodes') }}
+        </p>
+      </div>
+
+      <!-- Topic (Documentary fields) -->
+      <div *ngIf="contentType() === 'DOCUMENTARY'">
+        <label class="block text-sm text-gray-300 mb-2">
+          Topic 
+          <span *ngIf="contentForm.get('topic')?.invalid && contentForm.get('topic')?.touched" class="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          formControlName="topic"
+          placeholder="Documentary topic"
+          class="w-full px-4 py-2 bg-[#0B0E14] border border-[#8B5CF6]/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#8B5CF6]"
+          [class.border-red-500]="contentForm.get('topic')?.invalid && contentForm.get('topic')?.touched"
+        />
+        <p *ngIf="contentForm.get('topic')?.invalid && contentForm.get('topic')?.touched" class="text-red-500 text-sm mt-1">
+          {{ getFieldError('topic') }}
+        </p>
+      </div>
+
+      <!-- Narrator (Documentary fields) -->
+      <div *ngIf="contentType() === 'DOCUMENTARY'">
+        <label class="block text-sm text-gray-300 mb-2">
+          Narrator 
+          <span *ngIf="contentForm.get('narrator')?.invalid && contentForm.get('narrator')?.touched" class="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          formControlName="narrator"
+          placeholder="Narrator name"
+          class="w-full px-4 py-2 bg-[#0B0E14] border border-[#8B5CF6]/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-[#8B5CF6]"
+          [class.border-red-500]="contentForm.get('narrator')?.invalid && contentForm.get('narrator')?.touched"
+        />
+        <p *ngIf="contentForm.get('narrator')?.invalid && contentForm.get('narrator')?.touched" class="text-red-500 text-sm mt-1">
+          {{ getFieldError('narrator') }}
+        </p>
       </div>
     </form>
 

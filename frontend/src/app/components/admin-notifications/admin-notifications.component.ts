@@ -7,9 +7,14 @@ import { CustomValidators } from '../../services/validators';
 
 export interface Notification {
   id?: string;
-  title: string;
   message: string;
-  read: boolean;
+  type?: string;
+  isRead?: boolean;
+  userId?: string;
+  username?: string;
+  createdAt?: string;
+  title?: string;
+  read?: boolean;
 }
 
 @Component({
@@ -56,14 +61,14 @@ export class AdminNotificationsComponent implements OnInit {
   loadNotifications() {
     this.loading = true;
     this.error = null;
-    // Load notifications for a default user ID
-    this.notificationService.getNotificationsByUserId('1').subscribe({
+    this.notificationService.getNotifications().subscribe({
       next: (data) => {
         this.notifications = data;
         this.loading = false;
+        console.log(`✓ Loaded ${data.length} notification(s)`);
       },
       error: (err) => {
-        this.error = 'Failed to load notifications: ' + err.message;
+        this.error = 'Failed to load notifications';
         this.loading = false;
         console.error('Error loading notifications:', err);
       },
@@ -94,8 +99,10 @@ export class AdminNotificationsComponent implements OnInit {
     }
 
     const formData = {
-      ...this.notificationForm.value,
-      read: false,
+      message: this.notificationForm.value.message,
+      title: this.notificationForm.value.title,
+      type: 'INFO',
+      isRead: false,
     };
 
     this.createNotification(formData);
@@ -108,10 +115,9 @@ export class AdminNotificationsComponent implements OnInit {
         this.notifications.unshift(response);
         this.closeForm();
         this.loading = false;
-        alert('Notification sent successfully!');
       },
       error: (err) => {
-        this.error = 'Failed to send notification: ' + err.message;
+        this.error = 'Failed to send notification';
         this.loading = false;
         console.error('Error sending notification:', err);
       },
@@ -123,7 +129,7 @@ export class AdminNotificationsComponent implements OnInit {
       next: () => {
         const notif = this.notifications.find(n => n.id === id);
         if (notif) {
-          notif.read = true;
+          notif.isRead = true;
         }
       },
       error: (err) => {
@@ -139,10 +145,9 @@ export class AdminNotificationsComponent implements OnInit {
         next: () => {
           this.notifications = this.notifications.filter(n => n.id !== id);
           this.loading = false;
-          alert('Notification deleted successfully!');
         },
         error: (err) => {
-          this.error = 'Failed to delete notification: ' + err.message;
+          this.error = 'Failed to delete notification';
           this.loading = false;
           console.error('Error deleting notification:', err);
         },
@@ -151,7 +156,7 @@ export class AdminNotificationsComponent implements OnInit {
   }
 
   get unreadCount(): number {
-    return this.notifications.filter(n => !n.read).length;
+    return this.notifications.filter(n => !(n.isRead ?? n.read ?? false)).length;
   }
 
   get sentThisWeek(): number {

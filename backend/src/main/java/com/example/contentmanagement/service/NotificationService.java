@@ -5,6 +5,7 @@ import java.util.List;
 
 public interface NotificationService {
     NotificationDTO createNotification(NotificationDTO notificationDTO);
+    List<NotificationDTO> getAllNotifications();
     List<NotificationDTO> getNotificationsByUserId(String userId);
     void markAsRead(String id);
     void deleteNotification(String id);

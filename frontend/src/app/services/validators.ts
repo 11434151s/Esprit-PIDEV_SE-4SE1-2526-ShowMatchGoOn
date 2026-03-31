@@ -174,4 +174,155 @@ export class CustomValidators {
       return null;
     };
   }
+
+  /**
+   * Validates that a name field contains only alphanumeric characters, spaces, hyphens, apostrophes, commas, and periods
+   * Rejects special characters like @, #, $, %, &, etc.
+   * Allows commas for separating multiple names (e.g., "Lana Wachowski, Lilly Wachowski")
+   */
+  static noSpecialCharacters(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) return null;
+    // Allow: letters, numbers, spaces, hyphens, apostrophes, commas, periods, and accented characters
+    const nameRegex = /^[\p{L}\p{N}\s\-',.àâäéèêëïîôöùûüçœæÀÂÄÉÈÊËÏÎÔÖÙÛÜÇŒÆ]+$/u;
+    if (!nameRegex.test(control.value)) {
+      return { specialCharacters: true };
+    }
+    return null;
+  }
+
+  /**
+   * Validates that a field doesn't have leading or trailing whitespace
+   * Allows internal spaces
+   */
+  static noLeadingTrailingWhitespace(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) return null;
+    const value = typeof control.value === 'string' ? control.value : String(control.value);
+    if (value !== value.trim()) {
+      return { leadingTrailingWhitespace: true };
+    }
+    return null;
+  }
+
+  /**
+   * Validates phone number format (flexible international format)
+   * Accepts formats like: +1234567890, (123) 456-7890, 123-456-7890, 1234567890
+   */
+  static phoneNumber(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) return null;
+    // Allow digits, spaces, hyphens, parentheses, and plus sign
+    const phoneRegex = /^[\d\s\-().\+]+$/;
+    if (!phoneRegex.test(control.value)) {
+      return { invalidPhoneFormat: true };
+    }
+    // Remove non-digit characters and check if at least 7 digits
+    const digitCount = control.value.replace(/\D/g, '').length;
+    if (digitCount < 7) {
+      return { phoneNumberTooShort: true };
+    }
+    return null;
+  }
+
+  /**
+   * Validates that username contains only alphanumeric characters, underscores, and hyphens
+   * No spaces allowed
+   */
+  static validUsername(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) return null;
+    const usernameRegex = /^[a-zA-Z0-9_\-]+$/;
+    if (!usernameRegex.test(control.value)) {
+      return { invalidUsername: true };
+    }
+    return null;
+  }
+
+  /**
+   * Validates password strength
+   * Requires: at least 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character
+   */
+  static strongPassword(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) return null;
+    const value = control.value;
+    const errors: ValidationErrors = {};
+
+    if (value.length < 8) {
+      errors['passwordTooShort'] = true;
+    }
+    if (!/[A-Z]/.test(value)) {
+      errors['noUppercase'] = true;
+    }
+    if (!/[a-z]/.test(value)) {
+      errors['noLowercase'] = true;
+    }
+    if (!/[0-9]/.test(value)) {
+      errors['noNumber'] = true;
+    }
+    if (!/[!@#$%^&*()_\-+=\[\]{};:'",.<>?/\\|`~]/.test(value)) {
+      errors['noSpecialChar'] = true;
+    }
+
+    return Object.keys(errors).length > 0 ? errors : null;
+  }
+
+  /**
+   * Validates that a field contains only alphanumeric characters and spaces
+   * Useful for location, city, or state names
+   */
+  static alphanumericWithSpaces(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) return null;
+    const regex = /^[a-zA-Z0-9\s\-àâäéèêëïîôöùûüçœæÀÂÄÉÈÊËÏÎÔÖÙÛÜÇŒÆ]+$/;
+    if (!regex.test(control.value)) {
+      return { alphanumericOnly: true };
+    }
+    return null;
+  }
+
+  /**
+   * Validates that a string doesn't contain only whitespace
+   */
+  static notOnlyWhitespace(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) return null;
+    const value = typeof control.value === 'string' ? control.value : String(control.value);
+    if (value.trim() === '') {
+      return { onlyWhitespace: true };
+    }
+    return null;
+  }
+
+  /**
+   * Validates minimum character count (after trimming whitespace)
+   */
+  static minLengthAfterTrim(min: number): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (!control.value) return null;
+      const trimmedValue = typeof control.value === 'string' ? control.value.trim() : String(control.value).trim();
+      if (trimmedValue.length < min) {
+        return { minlength: { requiredLength: min, actualLength: trimmedValue.length } };
+      }
+      return null;
+    };
+  }
+
+  /**
+   * Validates that integer is positive (greater than 0)
+   */
+  static positiveInteger(control: AbstractControl): ValidationErrors | null {
+    if (control.value === null || control.value === undefined || control.value === '') return null;
+    const value = Number(control.value);
+    if (isNaN(value) || !Number.isInteger(value) || value <= 0) {
+      return { positiveInteger: true };
+    }
+    return null;
+  }
+
+  /**
+   * Validates that value is a valid non-negative integer
+   */
+  static nonNegativeInteger(control: AbstractControl): ValidationErrors | null {
+    if (control.value === null || control.value === undefined || control.value === '') return null;
+    const value = Number(control.value);
+    if (isNaN(value) || !Number.isInteger(value) || value < 0) {
+      return { nonNegativeInteger: true };
+    }
+    return null;
+  }
 }

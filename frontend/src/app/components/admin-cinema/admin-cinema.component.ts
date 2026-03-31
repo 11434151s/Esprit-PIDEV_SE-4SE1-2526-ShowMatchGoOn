@@ -2,14 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { LucideAngularModule, MapPin, Building, Calendar, Plus, Edit2, Trash2, X } from 'lucide-angular';
-import { CategoryService } from '../../services/api.service';
+import { CategoryService, CategoryDTO as Category } from '../../services/api.service';
 import { CustomValidators } from '../../services/validators';
-
-export interface Category {
-  id?: string;
-  name: string;
-  description: string;
-}
 
 @Component({
   selector: 'app-admin-cinema',
@@ -47,8 +41,19 @@ export class AdminCinemaComponent implements OnInit {
 
   initializeForm() {
     this.categoryForm = this.fb.group({
-      name: ['', [Validators.required, CustomValidators.minLength(3), CustomValidators.maxLength(100)]],
-      description: ['', [Validators.required, CustomValidators.minLength(10), CustomValidators.maxLength(500)]],
+      name: ['', [
+        Validators.required,
+        CustomValidators.minLength(3),
+        CustomValidators.maxLength(100),
+        CustomValidators.noSpecialCharacters,
+        CustomValidators.noLeadingTrailingWhitespace
+      ]],
+      description: ['', [
+        Validators.required,
+        CustomValidators.minLength(10),
+        CustomValidators.maxLength(500),
+        CustomValidators.noLeadingTrailingWhitespace
+      ]],
     });
   }
 

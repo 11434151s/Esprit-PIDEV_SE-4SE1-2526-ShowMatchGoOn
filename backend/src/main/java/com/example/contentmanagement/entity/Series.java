@@ -1,16 +1,18 @@
 package com.example.contentmanagement.entity;
 
-import org.springframework.data.mongodb.core.mapping.Document;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
 
-@Document(collection = "series")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Series extends Content {
+    static {
+        // Register the Series subtype
+    }
     @NotNull(message = "Number of seasons is mandatory")
     @Positive(message = "Number of seasons must be a positive number")
     private Integer numberOfSeasons;
