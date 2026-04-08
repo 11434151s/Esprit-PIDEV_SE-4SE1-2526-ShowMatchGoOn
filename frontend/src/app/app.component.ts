@@ -1,5 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { WatchpartySessionComponent } from './components/watchparty-session/watchparty-session.component';
+
 
 import {
   trigger,
@@ -57,6 +59,7 @@ interface TabItem {
     AdminUsersComponent,
     FeedbackComponent,
     WatchPartyComponent,
+    WatchpartySessionComponent,
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
@@ -90,6 +93,8 @@ export class AppComponent {
   adminTab = signal<AdminTab>('content');
   mobileMenuOpen = signal(false);
   sidebarOpen = signal(true);
+  watchpartySessionId = signal<string | null>(null);
+
 
   readonly userTabs: TabItem[] = [
     { id: 'home', label: 'Home', icon: Home },
@@ -104,8 +109,8 @@ export class AppComponent {
     { id: 'cinema', label: 'Cinema Partners', icon: MapPin },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'users', label: 'Users & Loyalty', icon: UserCog },
-    { id: 'feedback', label: 'Liste Feedbacks', icon: Bell },
-    { id: 'watchparty', label: 'Liste WatchParties', icon: Users },
+    { id: 'feedback', label: 'Feedbacks List', icon: Bell },
+    { id: 'watchparty', label: 'WatchParties List', icon: Users },
   ];
 
   toggleMode() {
@@ -129,4 +134,12 @@ export class AppComponent {
   toggleSidebar() {
     this.sidebarOpen.set(!this.sidebarOpen());
   }
+
+  openWatchpartySession(id: string) {
+  this.watchpartySessionId.set(id);
+}
+
+closeWatchpartySession() {
+  this.watchpartySessionId.set(null);
+}
 }

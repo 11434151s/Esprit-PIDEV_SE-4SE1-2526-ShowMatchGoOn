@@ -2,9 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class FeedbackService {
 
   private apiUrl = 'http://localhost:8091/feedback';
@@ -13,6 +11,11 @@ export class FeedbackService {
 
   getAll(): Observable<any[]> {
     return this.http.get<any[]>(this.apiUrl);
+  }
+
+
+  getByWatchParty(watchPartyId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/watchparty/${watchPartyId}`);
   }
 
   addFeedback(data: { note: number; commentaire: string; watchPartyId: string }): Observable<any> {
@@ -25,5 +28,14 @@ export class FeedbackService {
 
   deleteFeedback(id: string): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/${id}`);
+  }
+
+  
+  likeFeedback(id: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${id}/like`, {});
+  }
+
+  dislikeFeedback(id: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${id}/dislike`, {});
   }
 }

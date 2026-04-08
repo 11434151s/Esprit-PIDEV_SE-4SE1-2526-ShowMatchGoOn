@@ -34,4 +34,9 @@ export class WatchpartyService {
   delete(id: string): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/${id}`);
   }
+
+  getParticipants(id: string): Observable<string[]> {
+  return this.http.get<string[]>(`${this.apiUrl}/${id}/participants`);
+ }
+ 
 }

@@ -1,3 +1,13 @@
+<!-- Session WatchParty plein écran -->
+<div *ngIf="watchpartySessionId()">
+  <app-watchparty-session
+    [sessionId]="watchpartySessionId()!"
+    (onClose)="closeWatchpartySession()">
+  </app-watchparty-session>
+</div>
+
+<!-- Reste de l'app seulement si pas en session -->
+<ng-container *ngIf="!watchpartySessionId()">
 <div *ngIf="appMode() === 'admin'" class="min-h-screen bg-[#0B0E14] text-white flex w-full">
   <aside
     [class]="sidebarOpen() ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
@@ -148,7 +158,11 @@
     <app-ai-discovery *ngIf="userTab() === 'discover'"></app-ai-discovery>
     <app-cinema-journey *ngIf="userTab() === 'cinema'"></app-cinema-journey>
     <app-feedback *ngIf="userTab() === 'feedback'" [mode]="'user'"></app-feedback>
-    <app-watchparty *ngIf="userTab() === 'watchparty'" [mode]="'user'"></app-watchparty>
+    <app-watchparty 
+  *ngIf="userTab() === 'watchparty'" 
+  [mode]="'user'"
+  (onOpenSession)="openWatchpartySession($event)">
+</app-watchparty>
   </main>
 
   <footer class="border-t border-[#8B5CF6]/20 py-8">
@@ -172,3 +186,4 @@
     </div>
   </footer>
 </div>
+</ng-container>
