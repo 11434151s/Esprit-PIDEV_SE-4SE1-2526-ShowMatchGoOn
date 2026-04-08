@@ -5,6 +5,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -13,7 +14,8 @@ import java.util.List;
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ToString
-@AllArgsConstructor @NoArgsConstructor
+@AllArgsConstructor
+@NoArgsConstructor
 public class WatchParty {
 
     @Id
@@ -23,10 +25,13 @@ public class WatchParty {
     Date dateCreation;
     String statut;
 
-    String clientId;
+    String clientId; //host
     String adminId;
     String contenuId;
 
-    List<String> reservationIds;
+    List<String> participantIds = new ArrayList<>();
+    ;
+    List<String> reservationIds = new ArrayList<>();
+    ;
 }
 
