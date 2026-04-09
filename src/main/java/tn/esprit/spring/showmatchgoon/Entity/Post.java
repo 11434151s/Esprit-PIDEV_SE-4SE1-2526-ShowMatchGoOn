@@ -1,0 +1,27 @@
+package tn.esprit.spring.showmatchgoon.Entity;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.util.Date;
+import java.util.List;
+
+@Document(collection = "posts")
+@Getter
+@Setter
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@ToString
+@AllArgsConstructor @NoArgsConstructor
+public class Post {
+
+    @Id
+    String id;
+
+    String titre;
+    String contenu;
+    Date datePublication;
+    List<String> commentaireIds;
+}
+
